@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}Gerät einladen – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="d-flex align-items-center mb-3">
+      <a href="{% url 'devices:list' %}" class="btn btn-link px-0 me-2"><i class="bi bi-arrow-left"></i></a>
+      <h1 class="h3 mb-0">Gerät einladen</h1>
+    </div>
+
+    {% if has_installers %}
+    <div class="card">
+      <div class="card-body p-4">
+        <p class="text-muted">
+          Wählen Sie den Monteur aus. Anschließend erhalten Sie einen Einladungslink samt
+          QR-Code, den der Monteur auf seinem Gerät öffnet.
+        </p>
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% include "includes/_form_fields.html" %}
+          <button type="submit" class="btn btn-primary btn-lg w-100">
+            <i class="bi bi-qr-code me-1"></i>Einladung erstellen
+          </button>
+        </form>
+      </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">
+      Für diesen Mandanten gibt es keine aktiven Monteure. Legen Sie zuerst unter
+      <a href="{% url 'accounts:user_list' %}">Benutzer</a> einen Monteur an.
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

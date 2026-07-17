@@ -113,3 +113,110 @@ class User(AbstractBaseUser):
     def can_manage_users(self) -> bool:
         """Superadmins und Mandantenadmins dürfen Benutzer verwalten."""
         return self.role in (Role.SUPERADMIN, Role.TENANT_ADMIN)
+
+
+class DeviceInvite(models.Model):
+    """Einmalige, ablaufende Einladung zur Registrierung eines Monteur-Geräts.
+
+    Der Klartext-Token wird nur im Einladungslink/QR-Code ausgeliefert; in der Datenbank
+    liegt ausschließlich sein SHA-256-Hash. Die Einlösung erfolgt atomar (bedingtes UPDATE
+    auf ``used_at``), sodass eine Einladung nicht doppelt verwendet werden kann.
+
+    Von der Mandantenprüfung ausgenommen: Der Registrierungs-Flow ruft die Einladung anhand
+    des Token-Hashes ab, bevor ein Mandantenkontext existiert.
+    """
+
+    tenant_exempt = True
+
+    tenant = models.ForeignKey(
+        "core.Tenant",
+        on_delete=models.CASCADE,
+        related_name="device_invites",
+        verbose_name="Mandant",
+    )
+    user = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="device_invites",
+        verbose_name="Monteur",
+    )
+    token_hash = models.CharField("Token-Hash", max_length=64, unique=True)
+    created_by = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_device_invites",
+        verbose_name="Erstellt von",
+    )
+    created_at = models.DateTimeField("Erstellt am", default=timezone.now, editable=False)
+    expires_at = models.DateTimeField("Gültig bis")
+    used_at = models.DateTimeField("Eingelöst am", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Geräteeinladung"
+        verbose_name_plural = "Geräteeinladungen"
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        return f"Einladung für {self.user.full_name}"
+
+    @property
+    def is_used(self) -> bool:
+        return self.used_at is not None
+
+    @property
+    def is_expired(self) -> bool:
+        return timezone.now() >= self.expires_at
+
+    @property
+    def is_valid(self) -> bool:
+        return not self.is_used and not self.is_expired
+
+
+class Device(models.Model):
+    """Ein registriertes Monteur-Gerät mit dauerhaftem Zugangstoken.
+
+    In der Datenbank liegt nur der SHA-256-Hash des Gerätetokens; der Klartext-Token wird
+    einmalig als HttpOnly-Cookie im Browser des Geräts gespeichert. Ein gesperrtes Gerät
+    (``revoked_at`` gesetzt) verliert beim nächsten Request sofort den Zugriff.
+
+    Von der Mandantenprüfung ausgenommen: Die Authentifizierung ruft das Gerät anhand des
+    Token-Hashes ab, bevor ein Mandantenkontext existiert.
+    """
+
+    tenant_exempt = True
+
+    tenant = models.ForeignKey(
+        "core.Tenant",
+        on_delete=models.CASCADE,
+        related_name="devices",
+        verbose_name="Mandant",
+    )
+    user = models.ForeignKey(
+        "accounts.User",
+        on_delete=models.CASCADE,
+        related_name="devices",
+        verbose_name="Monteur",
+    )
+    label = models.CharField("Bezeichnung", max_length=150, blank=True)
+    token_hash = models.CharField("Token-Hash", max_length=64, unique=True)
+    user_agent = models.CharField("User-Agent", max_length=400, blank=True)
+    created_at = models.DateTimeField("Registriert am", default=timezone.now, editable=False)
+    last_seen = models.DateTimeField("Zuletzt gesehen", null=True, blank=True)
+    revoked_at = models.DateTimeField("Gesperrt am", null=True, blank=True)
+
+    class Meta:
+        verbose_name = "Gerät"
+        verbose_name_plural = "Geräte"
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["tenant", "-created_at"]),
+        ]
+
+    def __str__(self) -> str:
+        return self.label or f"Gerät {self.pk}"
+
+    @property
+    def is_revoked(self) -> bool:
+        return self.revoked_at is not None

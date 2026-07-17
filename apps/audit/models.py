@@ -35,6 +35,11 @@ class AuditAction(models.TextChoices):
     SENSOR_UPDATED = "sensor_updated", "Sensor geändert"
     SENSOR_DELETED = "sensor_deleted", "Sensor gelöscht"
     SENSOR_IMPORTED = "sensor_imported", "Sensoren importiert"
+    DEVICE_INVITE_CREATED = "device_invite_created", "Geräteeinladung erstellt"
+    DEVICE_INVITE_REVOKED = "device_invite_revoked", "Geräteeinladung widerrufen"
+    DEVICE_REGISTERED = "device_registered", "Gerät registriert"
+    DEVICE_REVOKED = "device_revoked", "Gerät gesperrt"
+    DEVICE_REMOVED = "device_removed", "Gerät entfernt"
 
 
 class AuditLog(models.Model):

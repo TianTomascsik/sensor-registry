@@ -81,3 +81,30 @@ class UserUpdateForm(forms.Form):
     def __init__(self, *args: Any, role_choices: list[tuple[str, str]], **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         _set_role_choices(self, role_choices)
+
+
+class InviteCreateForm(forms.Form):
+    """Auswahl eines Monteurs, für den eine Geräteeinladung erstellt wird."""
+
+    user = forms.ModelChoiceField(
+        label="Monteur",
+        queryset=User.objects.none(),
+        widget=forms.Select(attrs=_SELECT),
+        empty_label="Monteur auswählen …",
+    )
+
+    def __init__(self, *args: Any, installers: Any, **kwargs: Any) -> None:
+        super().__init__(*args, **kwargs)
+        cast("forms.ModelChoiceField[User]", self.fields["user"]).queryset = installers
+
+
+class DeviceRegisterForm(forms.Form):
+    """Bestätigung der Geräteregistrierung durch den Monteur."""
+
+    label = forms.CharField(
+        label="Gerätename (optional)",
+        max_length=150,
+        required=False,
+        widget=forms.TextInput(attrs={**_TEXT, "placeholder": "z. B. Diensthandy"}),
+        help_text="Hilft dem Administrator, dieses Gerät später zuzuordnen.",
+    )

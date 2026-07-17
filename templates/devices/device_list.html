@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Geräte – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Geräte</h1>
+  <a href="{% url 'devices:invite_create' %}" class="btn btn-primary btn-block-mobile">
+    <i class="bi bi-qr-code me-1"></i>Gerät einladen
+  </a>
+</div>
+
+{% if not has_tenant and is_superadmin %}
+<div class="alert alert-info">
+  Gesamtsicht: Geräte aller Mandanten. Zum Einladen bitte oben einen Mandanten wählen.
+</div>
+{% endif %}
+
+<h2 class="h5 mt-4">Offene Einladungen</h2>
+{% if invites %}
+<div class="card mb-4">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Monteur</th>
+          <th scope="col" class="d-none d-md-table-cell">Erstellt</th>
+          <th scope="col">Gültig bis</th>
+          <th scope="col" class="text-end">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in invites %}
+        <tr>
+          <td class="fw-medium">{{ i.user.full_name }}</td>
+          <td class="d-none d-md-table-cell">{{ i.created_at|date:"d.m.Y H:i" }}</td>
+          <td>{{ i.expires_at|date:"d.m.Y H:i" }}</td>
+          <td class="text-end text-nowrap">
+            <form method="post" action="{% url 'devices:invite_revoke' i.pk %}" class="d-inline"
+                  onsubmit="return confirm('Einladung wirklich widerrufen?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-x-lg"></i><span class="d-none d-sm-inline ms-1">Widerrufen</span>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-secondary">Keine offenen Einladungen.</div>
+{% endif %}
+
+<h2 class="h5 mt-4">Registrierte Geräte</h2>
+{% if devices %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Monteur</th>
+          <th scope="col" class="d-none d-md-table-cell">Gerät</th>
+          <th scope="col" class="d-none d-lg-table-cell">Zuletzt gesehen</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="text-end">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for d in devices %}
+        <tr>
+          <td class="fw-medium">
+            {{ d.user.full_name }}
+            <div class="text-muted small d-md-none">{{ d.label|default:"Unbenannt" }}</div>
+          </td>
+          <td class="d-none d-md-table-cell">{{ d.label|default:"Unbenannt" }}</td>
+          <td class="d-none d-lg-table-cell">
+            {% if d.last_seen %}{{ d.last_seen|date:"d.m.Y H:i" }}{% else %}–{% endif %}
+          </td>
+          <td>
+            {% if d.is_revoked %}
+            <span class="badge text-bg-danger badge-status">Gesperrt</span>
+            {% else %}
+            <span class="badge text-bg-success badge-status">Aktiv</span>
+            {% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            {% if not d.is_revoked %}
+            <form method="post" action="{% url 'devices:revoke' d.pk %}" class="d-inline"
+                  onsubmit="return confirm('Gerät sperren? Es verliert sofort den Zugriff.');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-slash-circle"></i><span class="d-none d-sm-inline ms-1">Sperren</span>
+              </button>
+            </form>
+            {% endif %}
+            <form method="post" action="{% url 'devices:remove' d.pk %}" class="d-inline"
+                  onsubmit="return confirm('Gerät endgültig entfernen?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-trash"></i><span class="d-none d-sm-inline ms-1">Entfernen</span>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="alert alert-secondary">Noch keine Geräte registriert.</div>
+{% endif %}
+{% endblock %}

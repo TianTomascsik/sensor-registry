@@ -5,7 +5,8 @@ Sie hält fest, **wo, wann, durch welchen Monteur und in welchem Projekt** ein S
 verbaut wurde – inklusive GPS-Position und Fotos.
 
 Diese Anwendung wird schrittweise (in Phasen) entwickelt. Jede Phase ist vollständig
-lauffähig, getestet und dokumentiert. Der aktuelle Stand ist **Phase 2 (Projekte & Sensoren)**.
+lauffähig, getestet und dokumentiert. Der aktuelle Stand ist
+**Phase 3 (Geräteanmeldung für Monteure)**.
 
 ## Technologie
 
@@ -67,7 +68,7 @@ uv run mypy .            # statische Typprüfung (strict)
 ```
 config/            Django-Projekt: Settings-Split (base/dev/prod/test), URLs, WSGI/ASGI
 apps/core/         Mandant (Tenant), Mandanten-Enforcement, Middleware, Dashboard, Mandantenverwaltung
-apps/accounts/     Benutzer, Rollen, Anmeldung, Benutzerverwaltung
+apps/accounts/     Benutzer, Rollen, Anmeldung, Benutzerverwaltung, Geräteanmeldung (QR/Token)
 apps/projects/     Projekte und Benutzerzuweisungen
 apps/sensors/      Sensoren und CSV-Import
 apps/audit/        Audit-Log (Modell + Service)
@@ -83,3 +84,4 @@ docs/              Installations- und Phasendokumentation
 - [docs/INSTALL.md](docs/INSTALL.md) – Installation unter Ubuntu (mit und ohne Docker)
 - [docs/PHASE-1.md](docs/PHASE-1.md) – Umfang, Entscheidungen und Tests der Phase 1
 - [docs/PHASE-2.md](docs/PHASE-2.md) – Umfang, Entscheidungen und Tests der Phase 2
+- [docs/PHASE-3.md](docs/PHASE-3.md) – Umfang, Entscheidungen und Tests der Phase 3

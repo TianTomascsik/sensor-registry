@@ -58,6 +58,11 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Nach der Authentifizierung: authentifiziert Monteur-Geräte per Token-Cookie, sofern
+    # keine Session-Anmeldung vorliegt (setzt request.user, ohne eine Admin-Session zu
+    # überschreiben). Muss VOR der Mandanten-Middleware laufen, damit der Mandantenkontext
+    # aus dem Geräte-Benutzer abgeleitet werden kann.
+    "apps.accounts.middleware.DeviceTokenMiddleware",
     # Muss NACH der Authentifizierung laufen: leitet den Mandantenkontext aus dem
     # angemeldeten Benutzer ab und räumt ihn am Ende jedes Requests wieder auf.
     "apps.core.middleware.TenantContextMiddleware",
@@ -181,6 +186,18 @@ REST_FRAMEWORK = {
 # --- Fachliche Standardwerte ---
 # Standard-Grenzwert für die GPS-Genauigkeit (Meter); pro Mandant überschreibbar.
 GPS_ACCURACY_DEFAULT_THRESHOLD_M = 5
+
+# --- Geräteanmeldung (Monteure) ---
+# Cookie-Name des Gerätetokens. In Produktion wird der __Host-Präfix verwendet (siehe prod.py),
+# der Secure + Path=/ + kein Domain-Attribut voraussetzt.
+DEVICE_TOKEN_COOKIE_NAME = "device_token"
+# Lebensdauer des Gerätetokens (~1 Jahr): „dauerhaft angemeldet“ ohne Passwort.
+DEVICE_TOKEN_COOKIE_MAX_AGE = 365 * 24 * 3600
+# Gültigkeitsdauer einer Einladung in Tagen.
+DEVICE_INVITE_TTL_DAYS = 14
+# „last_seen“ wird höchstens einmal je Zeitfenster (Sekunden) aktualisiert – verhindert
+# einen Datenbank-Write pro Request.
+DEVICE_LAST_SEEN_THROTTLE_SECONDS = 900
 
 # --- Logging ---
 LOGGING = {

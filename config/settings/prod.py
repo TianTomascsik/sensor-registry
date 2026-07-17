@@ -32,3 +32,8 @@ X_FRAME_OPTIONS = "DENY"
 
 # In Produktion liefert Nginx geschützte Medien via X-Accel-Redirect aus.
 MEDIA_SERVE_BACKEND = env("MEDIA_SERVE_BACKEND", default="accel")
+
+# __Host-Präfix härtet das Gerätetoken-Cookie (nur über HTTPS, Path=/, ohne Domain-Attribut).
+# Setzt DJANGO_SECURE_SSL=1 voraus, damit das Cookie mit Secure ausgeliefert wird.
+if _secure_ssl:
+    DEVICE_TOKEN_COOKIE_NAME = "__Host-device_token"
