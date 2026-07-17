@@ -1,0 +1,4 @@
+{% comment %}Statusabzeichen einer Installation. Erwartet `installation`.{% endcomment %}
+{% if installation.is_cancelled %}<span class="badge text-bg-danger badge-status">Storniert</span>
+{% elif installation.status == "installed" %}<span class="badge text-bg-success badge-status">Eingebaut</span>
+{% else %}<span class="badge text-bg-secondary badge-status">Ausgebaut</span>{% endif %}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Installation erfassen – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-9 col-lg-7">
+    <h1 class="h3 mb-3">Installation erfassen</h1>
+
+    <div id="capture"
+         data-create-url="{% url 'api:installation_create' %}"
+         data-photo-url="{% url 'api:installation_photos' '00000000-0000-0000-0000-000000000000' %}"
+         data-detail-url="{% url 'installations:detail' 0 %}"
+         data-gps-threshold="{{ gps_threshold_m }}">
+
+      {# CSRF-Cookie sicherstellen; das Token liest das Skript aus dem Cookie. #}
+      {% csrf_token %}
+
+      <!-- GPS-Status -->
+      <div class="card mb-3">
+        <div class="card-body">
+          <h2 class="h6"><i class="bi bi-geo-alt me-1"></i>Standort</h2>
+          <div id="gpsStatus" class="text-muted">Standort wird ermittelt …</div>
+          <div id="gpsWarning" class="alert alert-warning mt-2 d-none mb-0"></div>
+        </div>
+      </div>
+
+      <!-- Projekt & Sensor -->
+      <div class="mb-3">
+        <label for="project" class="form-label fw-medium">Projekt</label>
+        <select id="project" class="form-select form-select-lg" required>
+          <option value="">Projekt wählen …</option>
+          {% for p in projects %}
+          <option value="{{ p.pk }}">{{ p.number }} – {{ p.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label for="sensorFilter" class="form-label fw-medium">Sensor (DevEUI)</label>
+        <input type="search" id="sensorFilter" class="form-control form-control-lg mb-2"
+               placeholder="DevEUI filtern …" autocomplete="off">
+        <select id="sensor" class="form-select form-select-lg" size="5" required>
+          {% for s in sensors %}
+          <option value="{{ s.pk }}" data-eui="{{ s.dev_eui }}">{{ s.dev_eui }}{% if s.sensor_type %} · {{ s.sensor_type }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Fotos -->
+      <div class="mb-3">
+        <label class="form-label fw-medium">Fotos (mindestens eines)</label>
+        <input type="file" id="photos" class="form-control form-control-lg"
+               accept="image/*" capture="environment" multiple>
+        <div id="photoPreviews" class="d-flex flex-wrap gap-2 mt-2"></div>
+      </div>
+
+      <!-- Beschreibung -->
+      <div class="mb-3">
+        <label for="description" class="form-label fw-medium">Beschreibung</label>
+        <textarea id="description" class="form-control form-control-lg" rows="3"></textarea>
+      </div>
+
+      <div id="captureStatus" class="alert d-none" role="status"></div>
+
+      <button id="submitBtn" type="button" class="btn btn-primary btn-lg w-100" disabled>
+        <i class="bi bi-check-lg me-1"></i>Installation speichern
+      </button>
+      <p class="text-muted small mt-2">
+        Ohne gültigen Standort und mindestens ein Foto ist kein Speichern möglich.
+      </p>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script type="module" src="{% static 'js/capture.js' %}"></script>
+{% endblock %}

@@ -40,6 +40,10 @@ class AuditAction(models.TextChoices):
     DEVICE_REGISTERED = "device_registered", "Gerät registriert"
     DEVICE_REVOKED = "device_revoked", "Gerät gesperrt"
     DEVICE_REMOVED = "device_removed", "Gerät entfernt"
+    INSTALLATION_CREATED = "installation_created", "Installation erfasst"
+    INSTALLATION_CORRECTED = "installation_corrected", "Installation korrigiert"
+    INSTALLATION_CANCELLED = "installation_cancelled", "Installation storniert"
+    INSTALLATION_PHOTO_ADDED = "installation_photo_added", "Foto hinzugefügt"
 
 
 class AuditLog(models.Model):

@@ -65,6 +65,12 @@ module = [
 ]
 ignore_missing_imports = true
 
+# DRF-Serializer sind zwar generisch typisiert, aber zur Laufzeit nicht subscriptbar; daher
+# werden sie ohne Typparameter verwendet. Nur für dieses Modul gelockert.
+[[tool.mypy.overrides]]
+module = ["apps.installations.api"]
+disallow_any_generics = false
+
 [tool.django-stubs]
 django_settings_module = "config.settings.dev"
 

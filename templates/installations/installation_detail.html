@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Installation {{ installation.sensor.dev_eui }} – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <a href="{% url 'installations:list' %}" class="btn btn-link px-0 me-2"><i class="bi bi-arrow-left"></i></a>
+  <h1 class="h3 mb-0"><code>{{ installation.sensor.dev_eui }}</code></h1>
+  <span class="ms-2">{% include "installations/_status_badge.html" with installation=installation %}</span>
+</div>
+
+{% if installation.is_cancelled %}
+<div class="alert alert-danger">
+  <strong>Storniert</strong> am {{ installation.cancelled_at|date:"d.m.Y H:i" }}.
+  {% if installation.cancellation_reason %}<br>Grund: {{ installation.cancellation_reason }}{% endif %}
+</div>
+{% endif %}
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-5 col-sm-4 text-muted fw-normal">Projekt</dt>
+          <dd class="col-7 col-sm-8">
+            <a href="{% url 'projects:detail' installation.project_id %}">
+              {{ installation.project.number }} – {{ installation.project.name }}
+            </a>
+          </dd>
+          <dt class="col-5 col-sm-4 text-muted fw-normal">Monteur</dt>
+          <dd class="col-7 col-sm-8">{{ installation.installer.full_name }}</dd>
+          <dt class="col-5 col-sm-4 text-muted fw-normal">Erfasst am</dt>
+          <dd class="col-7 col-sm-8">{{ installation.received_at|date:"d.m.Y H:i" }}</dd>
+          <dt class="col-5 col-sm-4 text-muted fw-normal">GPS</dt>
+          <dd class="col-7 col-sm-8">
+            {{ installation.latitude }}, {{ installation.longitude }}
+            <span class="text-muted">(±{{ installation.accuracy_m|floatformat:0 }} m)</span>
+          </dd>
+          <dt class="col-5 col-sm-4 text-muted fw-normal">Beschreibung</dt>
+          <dd class="col-7 col-sm-8">{{ installation.description|default:"–"|linebreaksbr }}</dd>
+        </dl>
+      </div>
+      {% if can_manage and not installation.is_cancelled %}
+      <div class="card-footer bg-transparent d-flex gap-2">
+        <a href="{% url 'installations:correct' installation.pk %}" class="btn btn-outline-secondary">
+          <i class="bi bi-pencil me-1"></i>Korrigieren
+        </a>
+        <button type="button" class="btn btn-outline-danger" data-bs-toggle="collapse"
+                data-bs-target="#cancelForm">
+          <i class="bi bi-x-octagon me-1"></i>Stornieren
+        </button>
+      </div>
+      <div class="collapse" id="cancelForm">
+        <div class="card-body border-top">
+          <form method="post" action="{% url 'installations:cancel' installation.pk %}">
+            {% csrf_token %}
+            <label for="reason" class="form-label">Stornogrund</label>
+            <textarea name="reason" id="reason" class="form-control mb-2" rows="2" required></textarea>
+            <button type="submit" class="btn btn-danger">Installation stornieren</button>
+          </form>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header bg-transparent fw-semibold">
+        <i class="bi bi-images me-1"></i>Fotos ({{ photos|length }})
+      </div>
+      <div class="card-body">
+        {% if photos %}
+        <div class="d-flex flex-wrap gap-2">
+          {% for photo in photos %}
+          <a href="{% url 'installations:media' photo.photo_uuid 'original' %}" target="_blank" rel="noopener">
+            <img src="{% url 'installations:media' photo.photo_uuid 'thumb' %}"
+                 alt="Installationsfoto" class="rounded border" loading="lazy"
+                 style="width: 110px; height: 110px; object-fit: cover;">
+          </a>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted mb-0">Keine Fotos vorhanden.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -15,4 +15,6 @@ urlpatterns = [
     path("geraete/", include("apps.accounts.device_urls")),
     path("projekte/", include("apps.projects.urls")),
     path("sensoren/", include("apps.sensors.urls")),
+    path("installationen/", include("apps.installations.urls")),
+    path("api/v1/", include("apps.installations.api_urls")),
 ]

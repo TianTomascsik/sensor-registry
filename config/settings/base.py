@@ -47,6 +47,7 @@ LOCAL_APPS = [
     "apps.audit",
     "apps.projects",
     "apps.sensors",
+    "apps.installations",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 
@@ -167,6 +168,7 @@ DATA_UPLOAD_MAX_NUMBER_FIELDS = 2000
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.SessionAuthentication",
+        "apps.accounts.authentication.DeviceTokenAuthentication",
     ],
     "DEFAULT_PERMISSION_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",

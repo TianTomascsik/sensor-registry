@@ -6,7 +6,7 @@ verbaut wurde – inklusive GPS-Position und Fotos.
 
 Diese Anwendung wird schrittweise (in Phasen) entwickelt. Jede Phase ist vollständig
 lauffähig, getestet und dokumentiert. Der aktuelle Stand ist
-**Phase 3 (Geräteanmeldung für Monteure)**.
+**Phase 4 (Installationen & Fotos)**.
 
 ## Technologie
 
@@ -71,6 +71,7 @@ apps/core/         Mandant (Tenant), Mandanten-Enforcement, Middleware, Dashboar
 apps/accounts/     Benutzer, Rollen, Anmeldung, Benutzerverwaltung, Geräteanmeldung (QR/Token)
 apps/projects/     Projekte und Benutzerzuweisungen
 apps/sensors/      Sensoren und CSV-Import
+apps/installations/ Installationen, Fotos, REST-API (/api/v1), geschützte Medien
 apps/audit/        Audit-Log (Modell + Service)
 apps/testsupport/  Hilfsmodelle – nur unter den Test-Einstellungen geladen
 templates/         Django-Templates (Bootstrap 5, mobile first)
@@ -85,3 +86,4 @@ docs/              Installations- und Phasendokumentation
 - [docs/PHASE-1.md](docs/PHASE-1.md) – Umfang, Entscheidungen und Tests der Phase 1
 - [docs/PHASE-2.md](docs/PHASE-2.md) – Umfang, Entscheidungen und Tests der Phase 2
 - [docs/PHASE-3.md](docs/PHASE-3.md) – Umfang, Entscheidungen und Tests der Phase 3
+- [docs/PHASE-4.md](docs/PHASE-4.md) – Umfang, Entscheidungen und Tests der Phase 4

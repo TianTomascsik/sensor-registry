@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Installationen – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Installationen</h1>
+  <a href="{% url 'installations:capture' %}" class="btn btn-primary">
+    <i class="bi bi-plus-lg me-1"></i>Erfassen
+  </a>
+</div>
+
+{% include "includes/_search.html" with placeholder="DevEUI, Projekt, Beschreibung …" %}
+
+{% if installations %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">DevEUI</th>
+          <th scope="col" class="d-none d-md-table-cell">Projekt</th>
+          <th scope="col" class="d-none d-lg-table-cell">Monteur</th>
+          <th scope="col">Datum</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in installations %}
+        <tr role="button" onclick="window.location='{% url 'installations:detail' i.pk %}'">
+          <td class="fw-medium"><code>{{ i.sensor.dev_eui }}</code></td>
+          <td class="d-none d-md-table-cell">{{ i.project.number }}</td>
+          <td class="d-none d-lg-table-cell">{{ i.installer.full_name }}</td>
+          <td>{{ i.received_at|date:"d.m.Y" }}</td>
+          <td>{% include "installations/_status_badge.html" with installation=i %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "includes/_pagination.html" %}
+{% else %}
+<div class="alert alert-secondary">
+  {% if search %}Keine Installationen gefunden.{% else %}Noch keine Installationen erfasst.{% endif %}
+</div>
+{% endif %}
+{% endblock %}
