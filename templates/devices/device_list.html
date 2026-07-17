@@ -37,7 +37,7 @@
           <td>{{ i.expires_at|date:"d.m.Y H:i" }}</td>
           <td class="text-end text-nowrap">
             <form method="post" action="{% url 'devices:invite_revoke' i.pk %}" class="d-inline"
-                  onsubmit="return confirm('Einladung wirklich widerrufen?');">
+                  data-confirm="Einladung wirklich widerrufen?">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-danger">
                 <i class="bi bi-x-lg"></i><span class="d-none d-sm-inline ms-1">Widerrufen</span>
@@ -89,7 +89,7 @@
           <td class="text-end text-nowrap">
             {% if not d.is_revoked %}
             <form method="post" action="{% url 'devices:revoke' d.pk %}" class="d-inline"
-                  onsubmit="return confirm('Gerät sperren? Es verliert sofort den Zugriff.');">
+                  data-confirm="Gerät sperren? Es verliert sofort den Zugriff.">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-danger">
                 <i class="bi bi-slash-circle"></i><span class="d-none d-sm-inline ms-1">Sperren</span>
@@ -97,7 +97,7 @@
             </form>
             {% endif %}
             <form method="post" action="{% url 'devices:remove' d.pk %}" class="d-inline"
-                  onsubmit="return confirm('Gerät endgültig entfernen?');">
+                  data-confirm="Gerät endgültig entfernen?">
               {% csrf_token %}
               <button type="submit" class="btn btn-sm btn-outline-secondary">
                 <i class="bi bi-trash"></i><span class="d-none d-sm-inline ms-1">Entfernen</span>

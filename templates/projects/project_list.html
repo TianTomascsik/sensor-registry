@@ -28,7 +28,7 @@
       </thead>
       <tbody>
         {% for p in projects %}
-        <tr role="button" onclick="window.location='{% url 'projects:detail' p.pk %}'">
+        <tr role="button" data-href="{% url 'projects:detail' p.pk %}">
           <td class="fw-medium">{{ p.number }}</td>
           <td>
             <a href="{% url 'projects:detail' p.pk %}" class="text-decoration-none">{{ p.name }}</a>

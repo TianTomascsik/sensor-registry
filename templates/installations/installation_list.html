@@ -35,7 +35,7 @@
       </thead>
       <tbody>
         {% for i in installations %}
-        <tr role="button" onclick="window.location='{% url 'installations:detail' i.pk %}'">
+        <tr role="button" data-href="{% url 'installations:detail' i.pk %}">
           <td class="fw-medium"><code>{{ i.sensor.dev_eui }}</code></td>
           <td class="d-none d-md-table-cell">{{ i.project.number }}</td>
           <td class="d-none d-lg-table-cell">{{ i.installer.full_name }}</td>

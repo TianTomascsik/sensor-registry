@@ -1,0 +1,34 @@
+# systemd-Unit für den Gunicorn-Anwendungsserver (Betrieb OHNE Docker).
+#
+# Installation:
+#   sudo cp deploy/systemd/papa.service /etc/systemd/system/papa.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now papa
+#
+# Erwartet die Anwendung unter /srv/papa mit virtueller Umgebung in /srv/papa/.venv
+# und einer .env-Datei mit DJANGO_ENV=prod sowie den Produktionsvariablen.
+
+[Unit]
+Description=Sensor-Dokumentation (Gunicorn)
+After=network.target postgresql.service
+Wants=postgresql.service
+
+[Service]
+User=papa
+Group=papa
+WorkingDirectory=/srv/papa
+EnvironmentFile=/srv/papa/.env
+ExecStart=/srv/papa/.venv/bin/gunicorn config.wsgi:application -c deploy/gunicorn.conf.py
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=3
+
+# Härtung
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ReadWritePaths=/srv/papa/media
+
+[Install]
+WantedBy=multi-user.target

@@ -81,7 +81,7 @@
         <form method="post" action="{% url 'core:tenant_switch' %}" class="d-flex me-lg-3 my-2 my-lg-0">
           {% csrf_token %}
           <input type="hidden" name="next" value="{{ request.get_full_path }}">
-          <select name="tenant" class="form-select form-select-sm" onchange="this.form.submit()"
+          <select name="tenant" class="form-select form-select-sm" data-autosubmit
                   aria-label="Aktiven Mandanten wählen">
             <option value="">Gesamtsicht (alle Mandanten)</option>
             {% for t in available_tenants %}
@@ -141,6 +141,7 @@
   </main>
 
   <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+  <script type="module" src="{% static 'js/enhance.js' %}"></script>
   {% block scripts %}{% endblock %}
   {% if user.is_authenticated %}
   <script type="module" src="{% static 'js/pwa/register.js' %}"></script>

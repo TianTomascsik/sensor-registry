@@ -4,9 +4,9 @@ Mandantenfähige Webanwendung zur Dokumentation von LoRaWAN-Bodensensor-Installa
 Sie hält fest, **wo, wann, durch welchen Monteur und in welchem Projekt** ein Sensor
 verbaut wurde – inklusive GPS-Position und Fotos.
 
-Diese Anwendung wird schrittweise (in Phasen) entwickelt. Jede Phase ist vollständig
-lauffähig, getestet und dokumentiert. Der aktuelle Stand ist
-**Phase 7 (Exporte, Berichte & Audit-Log)**.
+Diese Anwendung wurde schrittweise in acht Phasen entwickelt. Jede Phase ist vollständig
+lauffähig, getestet und dokumentiert. **Alle acht Phasen sind abgeschlossen**; die Anwendung
+ist funktional vollständig und produktiv ausrollbar (siehe [docs/DEPLOY.md](docs/DEPLOY.md)).
 
 ## Technologie
 
@@ -92,4 +92,6 @@ docs/              Installations- und Phasendokumentation
 - [docs/PHASE-5.md](docs/PHASE-5.md) – Umfang, Entscheidungen und Tests der Phase 5
 - [docs/PHASE-6.md](docs/PHASE-6.md) – Umfang, Entscheidungen und Tests der Phase 6
 - [docs/PHASE-7.md](docs/PHASE-7.md) – Umfang, Entscheidungen und Tests der Phase 7
+- [docs/PHASE-8.md](docs/PHASE-8.md) – Umfang, Entscheidungen und Tests der Phase 8
+- [docs/DEPLOY.md](docs/DEPLOY.md) – Produktions-Deployment (systemd/Nginx und Docker), TLS, Backups
 - [docs/OFFLINE-TESTPROTOKOLL.md](docs/OFFLINE-TESTPROTOKOLL.md) – manuelle Offline-Abnahme
