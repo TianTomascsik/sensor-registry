@@ -1,22 +1,26 @@
-// Mobiler Erfassungs-Flow: GPS ermitteln, Fotos wählen und die Installation samt Fotos
-// idempotent über die REST-API speichern. Läuft als natives ES-Modul (kein Build-Schritt).
+// Mobiler Erfassungs-Flow (offline-first): GPS ermitteln, Fotos wählen und die Erfassung in
+// der lokalen Outbox ablegen. Die Synchronisation mit der REST-API übernimmt die Outbox –
+// online sofort, offline sobald wieder Verbindung besteht.
 "use strict";
+
+import { State, enqueue, getRefData, listEntries, reencode, sync } from "./pwa/outbox.js";
 
 const root = document.getElementById("capture");
 if (root) {
-  init(root);
+  init(root).catch((err) => console.error(err));
 }
 
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp("(^|;\\s*)" + name + "=([^;]*)"));
-  return match ? decodeURIComponent(match[2]) : "";
+function escapeHtml(value) {
+  const div = document.createElement("div");
+  div.textContent = value == null ? "" : String(value);
+  return div.innerHTML;
 }
 
-function init(root) {
-  const createUrl = root.dataset.createUrl;
-  const photoUrlTemplate = root.dataset.photoUrl; // enthält Platzhalter-UUID
-  const detailUrlTemplate = root.dataset.detailUrl; // endet auf /0/
+const notifyChanged = () => window.dispatchEvent(new Event("papa:outbox-changed"));
+
+async function init(root) {
   const gpsThreshold = parseFloat(root.dataset.gpsThreshold) || 5;
+  const detailTemplate = root.dataset.detailUrl; // endet auf /0/
 
   const gpsStatus = document.getElementById("gpsStatus");
   const gpsWarning = document.getElementById("gpsWarning");
@@ -28,18 +32,29 @@ function init(root) {
   const description = document.getElementById("description");
   const submitBtn = document.getElementById("submitBtn");
   const statusBox = document.getElementById("captureStatus");
+  const outboxEl = document.getElementById("outbox");
 
   let bestFix = null;
-  let photos = [];
+  let photoFiles = [];
 
-  // --- GPS ---------------------------------------------------------------
+  // --- Auswahllisten aus dem Offline-Replikat füllen ---------------------
+  await populateSelect(projectSelect, await getRefData("projects"), (p) => ({
+    value: p.id,
+    label: `${p.number} – ${p.name}`,
+  }));
+  await populateSelect(sensorSelect, await getRefData("sensors"), (s) => ({
+    value: s.id,
+    label: s.sensor_type ? `${s.dev_eui} · ${s.sensor_type}` : s.dev_eui,
+    data: { eui: s.dev_eui },
+  }));
+
   const updateSubmitState = () => {
-    submitBtn.disabled = !(bestFix && photos.length > 0);
+    submitBtn.disabled = !(bestFix && photoFiles.length > 0);
   };
 
+  // --- GPS ---------------------------------------------------------------
   const onPosition = (pos) => {
     const { latitude, longitude, accuracy } = pos.coords;
-    // Beste (genaueste) Messung behalten.
     if (!bestFix || accuracy < bestFix.accuracy) {
       bestFix = { latitude, longitude, accuracy, timestamp: pos.timestamp };
     }
@@ -56,13 +71,11 @@ function init(root) {
     }
     updateSubmitState();
   };
-
   const onPositionError = (err) => {
     gpsStatus.innerHTML =
-      `<span class="text-danger">Standort nicht verfügbar: ${err.message}. ` +
+      `<span class="text-danger">Standort nicht verfügbar: ${escapeHtml(err.message)}. ` +
       `Bitte den Standortzugriff erlauben.</span>`;
   };
-
   if ("geolocation" in navigator) {
     navigator.geolocation.watchPosition(onPosition, onPositionError, {
       enableHighAccuracy: true,
@@ -88,8 +101,7 @@ function init(root) {
       if (!file.type.startsWith("image/")) {
         continue;
       }
-      const entry = { file, clientUuid: crypto.randomUUID() };
-      photos.push(entry);
+      photoFiles.push(file);
       const img = document.createElement("img");
       img.style.width = "88px";
       img.style.height = "88px";
@@ -99,91 +111,111 @@ function init(root) {
       img.alt = file.name;
       previews.appendChild(img);
     }
-    photoInput.value = ""; // erneutes Wählen desselben Fotos erlauben
+    photoInput.value = "";
     updateSubmitState();
   });
 
-  // --- Speichern ---------------------------------------------------------
+  // --- Speichern (in die Outbox) ----------------------------------------
   const setStatus = (text, kind) => {
     statusBox.textContent = text;
     statusBox.className = `alert alert-${kind}`;
   };
 
   submitBtn.addEventListener("click", async () => {
-    if (!bestFix || photos.length === 0) {
+    if (!bestFix || photoFiles.length === 0) {
       return;
     }
     if (!projectSelect.value || !sensorSelect.value) {
       setStatus("Bitte Projekt und Sensor wählen.", "danger");
       return;
     }
-
     submitBtn.disabled = true;
-    setStatus("Installation wird gespeichert …", "info");
-    const csrftoken = getCookie("csrftoken");
-    const installationUuid = crypto.randomUUID();
-
+    setStatus("Fotos werden verarbeitet …", "info");
     try {
-      const createResponse = await fetch(createUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-CSRFToken": csrftoken },
-        body: JSON.stringify({
-          client_uuid: installationUuid,
-          sensor_id: parseInt(sensorSelect.value, 10),
-          project_id: parseInt(projectSelect.value, 10),
-          latitude: bestFix.latitude.toFixed(6),
-          longitude: bestFix.longitude.toFixed(6),
-          accuracy_m: bestFix.accuracy,
-          captured_at: new Date().toISOString(),
-          gps_timestamp: new Date(bestFix.timestamp).toISOString(),
-          description: description.value,
-        }),
-      });
-      if (!createResponse.ok) {
-        throw new Error(await describeError(createResponse));
+      const blobs = [];
+      for (const file of photoFiles) {
+        blobs.push(await reencode(file));
       }
-      const installation = await createResponse.json();
+      const entry = {
+        client_uuid: crypto.randomUUID(),
+        sensor_id: parseInt(sensorSelect.value, 10),
+        project_id: parseInt(projectSelect.value, 10),
+        latitude: bestFix.latitude.toFixed(6),
+        longitude: bestFix.longitude.toFixed(6),
+        accuracy_m: bestFix.accuracy,
+        captured_at: new Date().toISOString(),
+        gps_timestamp: new Date(bestFix.timestamp).toISOString(),
+        description: description.value,
+      };
+      await enqueue(entry, blobs);
 
-      // Fotos einzeln hochladen (granulare Teilerfolge).
-      const photoUrl = photoUrlTemplate.replace(
-        "00000000-0000-0000-0000-000000000000",
-        installationUuid,
+      // Formular zurücksetzen und Status anzeigen.
+      photoFiles = [];
+      previews.innerHTML = "";
+      description.value = "";
+      setStatus(
+        navigator.onLine
+          ? "Erfassung gespeichert. Wird synchronisiert …"
+          : "Offline gespeichert. Wird bei Verbindung automatisch übertragen.",
+        "success",
       );
-      let done = 0;
-      for (const entry of photos) {
-        setStatus(`Foto ${done + 1} von ${photos.length} wird hochgeladen …`, "info");
-        const form = new FormData();
-        form.append("image", entry.file);
-        form.append("client_uuid", entry.clientUuid);
-        form.append("order", String(done));
-        const photoResponse = await fetch(photoUrl, {
-          method: "POST",
-          headers: { "X-CSRFToken": csrftoken },
-          body: form,
-        });
-        if (!photoResponse.ok) {
-          throw new Error(await describeError(photoResponse));
-        }
-        done += 1;
-      }
-
-      setStatus("Gespeichert. Weiterleitung …", "success");
-      window.location.href = detailUrlTemplate.replace(/0\/$/, `${installation.id}/`);
+      await renderOutbox(outboxEl, detailTemplate);
+      sync(notifyChanged);
     } catch (err) {
-      setStatus(`Fehler beim Speichern: ${err.message}`, "danger");
+      setStatus(`Fehler: ${err.message}`, "danger");
+    } finally {
       submitBtn.disabled = false;
+      updateSubmitState();
     }
   });
+
+  window.addEventListener("papa:outbox-changed", () => renderOutbox(outboxEl, detailTemplate));
+  await renderOutbox(outboxEl, detailTemplate);
 }
 
-async function describeError(response) {
-  try {
-    const data = await response.json();
-    if (data.detail) {
-      return data.detail;
+async function populateSelect(select, items, mapper) {
+  for (const item of items) {
+    const { value, label, data } = mapper(item);
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    if (data) {
+      Object.assign(option.dataset, data);
     }
-    return Object.values(data).flat().join(" ");
-  } catch {
-    return `HTTP ${response.status}`;
+    select.appendChild(option);
   }
+}
+
+const STATE_LABEL = {
+  [State.PENDING]: ['<span class="badge text-bg-secondary">wartend</span>', ""],
+  [State.INSTALLATION_SYNCED]: ['<span class="badge text-bg-info">wird synchronisiert</span>', ""],
+  [State.DONE]: ['<span class="badge text-bg-success">erfolgreich</span>', ""],
+  [State.ERROR]: ['<span class="badge text-bg-danger">Fehler</span>', ""],
+};
+
+async function renderOutbox(container, detailTemplate) {
+  if (!container) {
+    return;
+  }
+  const entries = await listEntries();
+  if (entries.length === 0) {
+    container.innerHTML = '<p class="text-muted mb-0">Noch keine Erfassungen auf diesem Gerät.</p>';
+    return;
+  }
+  const rows = entries.map((entry) => {
+    const [badge] = STATE_LABEL[entry.state] || ['<span class="badge text-bg-secondary">?</span>'];
+    const when = new Date(entry.created_at).toLocaleString("de-CH");
+    const photos = `${entry.synced_photos || 0}/${entry.photo_count} Fotos`;
+    const detail =
+      entry.state === "done" && entry.installation_id
+        ? `<a href="${detailTemplate.replace(/0\/$/, `${entry.installation_id}/`)}" class="btn btn-sm btn-outline-primary">Details</a>`
+        : "";
+    const error = entry.error ? `<div class="text-danger small">${escapeHtml(entry.error)}</div>` : "";
+    return (
+      '<li class="list-group-item d-flex justify-content-between align-items-center">' +
+      `<div><div>${badge} <span class="text-muted small">${escapeHtml(when)}</span></div>` +
+      `<div class="small text-muted">${photos}</div>${error}</div>${detail}</li>`
+    );
+  });
+  container.innerHTML = `<ul class="list-group">${rows.join("")}</ul>`;
 }

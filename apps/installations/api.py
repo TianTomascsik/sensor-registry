@@ -27,8 +27,9 @@ from apps.installations.services import (
     visible_installations,
 )
 from apps.projects.models import Project
-from apps.projects.services import get_visible_project
+from apps.projects.services import get_visible_project, visible_projects
 from apps.sensors.models import Sensor
+from apps.sensors.services import list_sensors
 
 
 def _media_url(request: Request, photo: InstallationPhoto, variant: str) -> str:
@@ -215,3 +216,19 @@ class MapInstallationsAPIView(APIView):
         qs = map_installations(_user(request))
         payload = InstallationSerializer(qs, many=True, context={"request": request}).data
         return Response(payload)
+
+
+class RefDataAPIView(APIView):
+    """Referenzdaten (aktive Projekte + Sensoren) für das Offline-Replikat.
+
+    Monteure erhalten ihre zugewiesenen, aktiven Projekte; Administratoren alle aktiven
+    Projekte des Mandanten. Die Sensoren umfassen alle Sensoren des Mandanten.
+    """
+
+    def get(self, request: Request) -> Response:
+        user = _user(request)
+        projects = list(
+            visible_projects(user).filter(status="active").values("id", "number", "name")
+        )
+        sensors = list(list_sensors().values("id", "dev_eui", "sensor_type"))
+        return Response({"projects": projects, "sensors": sensors})

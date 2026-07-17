@@ -10,6 +10,7 @@ from __future__ import annotations
 from django.urls import include, path
 
 urlpatterns = [
+    path("", include("apps.pwa.urls")),
     path("", include("apps.core.urls")),
     path("konten/", include("apps.accounts.urls")),
     path("geraete/", include("apps.accounts.device_urls")),

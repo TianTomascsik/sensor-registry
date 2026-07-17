@@ -6,7 +6,7 @@ verbaut wurde – inklusive GPS-Position und Fotos.
 
 Diese Anwendung wird schrittweise (in Phasen) entwickelt. Jede Phase ist vollständig
 lauffähig, getestet und dokumentiert. Der aktuelle Stand ist
-**Phase 5 (Karte & Suche)**.
+**Phase 6 (PWA & Offline)**.
 
 ## Technologie
 
@@ -72,6 +72,7 @@ apps/accounts/     Benutzer, Rollen, Anmeldung, Benutzerverwaltung, Geräteanmel
 apps/projects/     Projekte und Benutzerzuweisungen
 apps/sensors/      Sensoren und CSV-Import
 apps/installations/ Installationen, Fotos, REST-API (/api/v1), geschützte Medien
+apps/pwa/          Web-App-Manifest und Service Worker (Offline-Betrieb)
 apps/audit/        Audit-Log (Modell + Service)
 apps/testsupport/  Hilfsmodelle – nur unter den Test-Einstellungen geladen
 templates/         Django-Templates (Bootstrap 5, mobile first)
@@ -88,3 +89,5 @@ docs/              Installations- und Phasendokumentation
 - [docs/PHASE-3.md](docs/PHASE-3.md) – Umfang, Entscheidungen und Tests der Phase 3
 - [docs/PHASE-4.md](docs/PHASE-4.md) – Umfang, Entscheidungen und Tests der Phase 4
 - [docs/PHASE-5.md](docs/PHASE-5.md) – Umfang, Entscheidungen und Tests der Phase 5
+- [docs/PHASE-6.md](docs/PHASE-6.md) – Umfang, Entscheidungen und Tests der Phase 6
+- [docs/OFFLINE-TESTPROTOKOLL.md](docs/OFFLINE-TESTPROTOKOLL.md) – manuelle Offline-Abnahme

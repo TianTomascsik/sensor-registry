@@ -13,7 +13,9 @@ from django.contrib import messages
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
 from django.utils import timezone
+from django.utils.decorators import method_decorator
 from django.views import View
+from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.generic import FormView, ListView, TemplateView
 
 from apps.accounts.models import Role, User
@@ -27,20 +29,23 @@ from apps.installations.forms import (
 )
 from apps.installations.models import Installation
 from apps.projects.services import visible_projects
-from apps.sensors.services import list_sensors
 
 
+@method_decorator(ensure_csrf_cookie, name="dispatch")
 class InstallationCaptureView(AuthenticatedViewMixin, TemplateView):
-    """Mobiler Erfassungsbildschirm: GPS, Fotos und Sensor-/Projektauswahl."""
+    """Mobiler Erfassungsbildschirm: GPS, Fotos und Sensor-/Projektauswahl.
+
+    Die Auswahllisten (Projekte/Sensoren) lädt der Client aus dem Offline-Replikat
+    (IndexedDB); die Seite selbst enthält daher keine serverseitig gerenderten Daten und
+    keinen ``{% csrf_token %}`` (das CSRF-Token wird zur Laufzeit aus dem Cookie gelesen),
+    damit sie unbedenklich vom Service Worker zwischengespeichert werden kann.
+    """
 
     template_name = "installations/capture.html"
 
     def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
         context = super().get_context_data(**kwargs)
-        user = self.acting_user
-        context["projects"] = visible_projects(user).filter(status="active")
-        context["sensors"] = list_sensors()
-        tenant = user.tenant
+        tenant = self.acting_user.tenant
         context["gps_threshold_m"] = tenant.gps_accuracy_threshold_m if tenant is not None else 5
         return context
 

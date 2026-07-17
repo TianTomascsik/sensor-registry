@@ -9,6 +9,7 @@ from apps.installations import api
 app_name = "api"
 
 urlpatterns = [
+    path("refdata/", api.RefDataAPIView.as_view(), name="refdata"),
     path("installations/", api.InstallationCreateAPIView.as_view(), name="installation_create"),
     path("installations/list/", api.InstallationListAPIView.as_view(), name="installation_list"),
     path("installations/map/", api.MapInstallationsAPIView.as_view(), name="installation_map"),
