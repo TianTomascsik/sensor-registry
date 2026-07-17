@@ -93,3 +93,11 @@ def admin_a_client(admin_a: User) -> Client:
 @pytest.fixture
 def admin_b_client(admin_b: User) -> Client:
     return _login(Client(), "admin-b@example.com", "pw-admin-b-123")
+
+
+@pytest.fixture
+def installer_a_client(installer_a: User) -> Client:
+    # Monteure haben kein Passwort (Geräteanmeldung folgt in Phase 3), daher force_login.
+    client = Client()
+    client.force_login(installer_a)
+    return client

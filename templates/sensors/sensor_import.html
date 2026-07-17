@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Sensoren importieren – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-10 col-lg-8">
+    <div class="d-flex align-items-center mb-3">
+      <a href="{% url 'sensors:list' %}" class="btn btn-link px-0 me-2"><i class="bi bi-arrow-left"></i></a>
+      <h1 class="h3 mb-0">Sensoren importieren</h1>
+    </div>
+
+    <div class="card mb-3">
+      <div class="card-body p-4">
+        <p class="text-muted">
+          Laden Sie eine CSV-Datei mit einer Kopfzeile hoch. Erkannt werden die Spalten
+          <strong>DevEUI</strong> (Pflicht), <strong>Hersteller</strong>, <strong>Typ</strong>,
+          <strong>Seriennummer</strong> und <strong>Bemerkung</strong>. Trennzeichen (Komma oder
+          Semikolon) werden automatisch erkannt.
+        </p>
+        <form method="post" enctype="multipart/form-data" novalidate>
+          {% csrf_token %}
+          {% include "includes/_form_fields.html" %}
+          <button type="submit" class="btn btn-primary btn-lg">
+            <i class="bi bi-upload me-1"></i>Importieren
+          </button>
+        </form>
+      </div>
+    </div>
+
+    {% if report %}
+    <div class="card">
+      <div class="card-header bg-transparent fw-semibold">Ergebnis des Imports</div>
+      <div class="card-body">
+        {% if report.has_fatal_error %}
+        <div class="alert alert-danger mb-0">{{ report.fatal_error }}</div>
+        {% else %}
+        <div class="row text-center g-2 mb-3">
+          <div class="col-6 col-md-3">
+            <div class="border rounded p-2">
+              <div class="fs-4 fw-semibold text-success">{{ report.created }}</div>
+              <div class="small text-muted">angelegt</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="border rounded p-2">
+              <div class="fs-4 fw-semibold">{{ report.skipped_existing }}</div>
+              <div class="small text-muted">bereits vorhanden</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="border rounded p-2">
+              <div class="fs-4 fw-semibold">{{ report.skipped_duplicate }}</div>
+              <div class="small text-muted">doppelt in Datei</div>
+            </div>
+          </div>
+          <div class="col-6 col-md-3">
+            <div class="border rounded p-2">
+              <div class="fs-4 fw-semibold text-danger">{{ report.error_count }}</div>
+              <div class="small text-muted">fehlerhaft</div>
+            </div>
+          </div>
+        </div>
+
+        {% if report.errors %}
+        <h2 class="h6">Fehlerhafte Zeilen</h2>
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead><tr><th>Zeile</th><th>Wert</th><th>Meldung</th></tr></thead>
+            <tbody>
+              {% for e in report.errors %}
+              <tr>
+                <td>{{ e.line }}</td>
+                <td><code>{{ e.value|default:"(leer)" }}</code></td>
+                <td>{{ e.message }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% endif %}
+        {% endif %}
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

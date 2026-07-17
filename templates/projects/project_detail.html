@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}{{ project.number }} – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex align-items-center mb-3">
+  <a href="{% url 'projects:list' %}" class="btn btn-link px-0 me-2"><i class="bi bi-arrow-left"></i></a>
+  <h1 class="h3 mb-0">{{ project.name }}</h1>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <div class="text-muted small">Projektnummer</div>
+            <div class="fs-5 fw-semibold">{{ project.number }}</div>
+          </div>
+          {% include "projects/_status_badge.html" with status=project.status label=project.get_status_display %}
+        </div>
+
+        <dl class="row mb-0">
+          <dt class="col-4 col-sm-3 text-muted fw-normal">Kunde</dt>
+          <dd class="col-8 col-sm-9">{{ project.customer|default:"–" }}</dd>
+          <dt class="col-4 col-sm-3 text-muted fw-normal">Erstellt</dt>
+          <dd class="col-8 col-sm-9">{{ project.created_at|date:"d.m.Y H:i" }}</dd>
+          <dt class="col-4 col-sm-3 text-muted fw-normal">Beschreibung</dt>
+          <dd class="col-8 col-sm-9">{{ project.description|default:"–"|linebreaksbr }}</dd>
+        </dl>
+      </div>
+      {% if can_manage %}
+      <div class="card-footer bg-transparent">
+        <a href="{% url 'projects:update' project.pk %}" class="btn btn-outline-secondary">
+          <i class="bi bi-pencil me-1"></i>Bearbeiten
+        </a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card">
+      <div class="card-header bg-transparent fw-semibold">
+        <i class="bi bi-people me-1"></i>Zugewiesene Benutzer
+      </div>
+      <ul class="list-group list-group-flush">
+        {% for a in assignments %}
+        <li class="list-group-item d-flex justify-content-between align-items-center">
+          <span>
+            {{ a.user.full_name }}
+            <span class="badge text-bg-light ms-1">{{ a.user.get_role_display }}</span>
+          </span>
+          {% if can_manage %}
+          <form method="post" action="{% url 'projects:unassign' project.pk a.user_id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-sm btn-outline-danger" title="Zuweisung entfernen">
+              <i class="bi bi-x-lg"></i>
+            </button>
+          </form>
+          {% endif %}
+        </li>
+        {% empty %}
+        <li class="list-group-item text-muted">Noch keine Benutzer zugewiesen.</li>
+        {% endfor %}
+      </ul>
+      {% if can_manage and assign_form.fields.user.queryset.exists %}
+      <div class="card-footer bg-transparent">
+        <form method="post" action="{% url 'projects:assign' project.pk %}" class="d-flex gap-2">
+          {% csrf_token %}
+          {{ assign_form.user }}
+          <button type="submit" class="btn btn-primary text-nowrap">
+            <i class="bi bi-plus-lg"></i><span class="d-none d-sm-inline ms-1">Zuweisen</span>
+          </button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

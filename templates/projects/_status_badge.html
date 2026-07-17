@@ -1,0 +1,4 @@
+{% comment %}Statusabzeichen für Projekte. Erwartet `status` und `label`.{% endcomment %}
+{% if status == "active" %}<span class="badge text-bg-success badge-status">{{ label }}</span>
+{% elif status == "completed" %}<span class="badge text-bg-secondary badge-status">{{ label }}</span>
+{% else %}<span class="badge text-bg-dark badge-status">{{ label }}</span>{% endif %}

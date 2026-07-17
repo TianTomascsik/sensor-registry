@@ -16,10 +16,24 @@ from django.http import HttpRequest, HttpResponseBase
 from apps.accounts.models import Role, User
 
 
-class RoleRequiredMixin(LoginRequiredMixin):
-    """Erlaubt den Zugriff nur Benutzern mit einer der ``allowed_roles``."""
+class AuthenticatedViewMixin(LoginRequiredMixin):
+    """Basis für Views, die eine Anmeldung erfordern.
+
+    Stellt die typsichere Eigenschaft :attr:`acting_user` bereit – nach ``dispatch`` ist
+    der Benutzer garantiert authentifiziert, sodass die Einschränkung auf das konkrete
+    Benutzermodell (statt ``AnonymousUser``) korrekt ist.
+    """
 
     request: HttpRequest
+
+    @property
+    def acting_user(self) -> User:
+        return cast(User, self.request.user)
+
+
+class RoleRequiredMixin(AuthenticatedViewMixin):
+    """Erlaubt den Zugriff nur Benutzern mit einer der ``allowed_roles``."""
+
     allowed_roles: Iterable[str] = ()
 
     def dispatch(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponseBase:
@@ -28,11 +42,6 @@ class RoleRequiredMixin(LoginRequiredMixin):
         if request.user.role not in set(self.allowed_roles):
             raise PermissionDenied("Für diese Aktion fehlt die erforderliche Rolle.")
         return super().dispatch(request, *args, **kwargs)
-
-    @property
-    def acting_user(self) -> User:
-        """Der angemeldete Benutzer (nach dispatch garantiert authentifiziert)."""
-        return cast(User, self.request.user)
 
 
 class SuperadminRequiredMixin(RoleRequiredMixin):
@@ -43,5 +52,15 @@ class SuperadminRequiredMixin(RoleRequiredMixin):
 
 class ManageUsersRequiredMixin(RoleRequiredMixin):
     """Für Benutzerverwaltung: Superadmins und Mandantenadministratoren."""
+
+    allowed_roles = (Role.SUPERADMIN, Role.TENANT_ADMIN)
+
+
+class AdminRequiredMixin(RoleRequiredMixin):
+    """Für die Verwaltung von Projekten und Sensoren: Superadmins und Mandantenadministratoren.
+
+    Bewusst getrennt von :class:`ManageUsersRequiredMixin`, auch wenn beide dieselben
+    Rollen zulassen – so bleiben die Zugriffsregeln je Fachbereich unabhängig anpassbar.
+    """
 
     allowed_roles = (Role.SUPERADMIN, Role.TENANT_ADMIN)

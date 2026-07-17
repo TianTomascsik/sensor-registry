@@ -1,12 +1,13 @@
 {% comment %}
 Wiederverwendbare Seitennavigation für paginierte Listen (Django ListView).
-Erwartet `page_obj` und `is_paginated` aus dem ListView-Kontext.
+Erwartet `page_obj` und `is_paginated` aus dem ListView-Kontext. Ein vorhandener
+Suchbegriff (`?q=`) bleibt beim Blättern erhalten.
 {% endcomment %}
 {% if is_paginated %}
 <nav aria-label="Seitennavigation" class="mt-3">
   <ul class="pagination justify-content-center">
     <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %}">
-      <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% else %}#{% endif %}">
+      <a class="page-link" href="{% if page_obj.has_previous %}?page={{ page_obj.previous_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% else %}#{% endif %}">
         <i class="bi bi-chevron-left"></i>
       </a>
     </li>
@@ -14,7 +15,7 @@ Erwartet `page_obj` und `is_paginated` aus dem ListView-Kontext.
       <span class="page-link">Seite {{ page_obj.number }} von {{ page_obj.paginator.num_pages }}</span>
     </li>
     <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}">
-      <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% else %}#{% endif %}">
+      <a class="page-link" href="{% if page_obj.has_next %}?page={{ page_obj.next_page_number }}{% if request.GET.q %}&q={{ request.GET.q|urlencode }}{% endif %}{% else %}#{% endif %}">
         <i class="bi bi-chevron-right"></i>
       </a>
     </li>

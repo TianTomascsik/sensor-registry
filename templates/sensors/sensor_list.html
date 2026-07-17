@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}Sensoren – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Sensoren</h1>
+  <div class="d-flex gap-2">
+    <a href="{% url 'sensors:import' %}" class="btn btn-outline-primary">
+      <i class="bi bi-upload me-1"></i>CSV-Import
+    </a>
+    <a href="{% url 'sensors:create' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i>Sensor anlegen
+    </a>
+  </div>
+</div>
+
+{% include "includes/_search.html" with placeholder="DevEUI, Hersteller, Typ …" %}
+
+{% if sensors %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">DevEUI</th>
+          <th scope="col" class="d-none d-md-table-cell">Hersteller</th>
+          <th scope="col" class="d-none d-md-table-cell">Typ</th>
+          <th scope="col" class="d-none d-lg-table-cell">Seriennummer</th>
+          <th scope="col" class="text-end">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in sensors %}
+        <tr>
+          <td class="fw-medium"><code>{{ s.dev_eui }}</code></td>
+          <td class="d-none d-md-table-cell">{{ s.manufacturer|default:"–" }}</td>
+          <td class="d-none d-md-table-cell">{{ s.sensor_type|default:"–" }}</td>
+          <td class="d-none d-lg-table-cell">{{ s.serial_number|default:"–" }}</td>
+          <td class="text-end text-nowrap">
+            <a href="{% url 'sensors:update' s.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i><span class="d-none d-sm-inline ms-1">Bearbeiten</span>
+            </a>
+            <form method="post" action="{% url 'sensors:delete' s.pk %}" class="d-inline"
+                  onsubmit="return confirm('Sensor {{ s.dev_eui }} wirklich löschen?');">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-outline-danger">
+                <i class="bi bi-trash"></i><span class="d-none d-sm-inline ms-1">Löschen</span>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "includes/_pagination.html" %}
+{% else %}
+<div class="alert alert-secondary">
+  {% if search %}Keine Sensoren gefunden.{% else %}Noch keine Sensoren vorhanden. Legen Sie einen an oder importieren Sie eine CSV-Liste.{% endif %}
+</div>
+{% endif %}
+{% endblock %}

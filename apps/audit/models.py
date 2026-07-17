@@ -27,6 +27,14 @@ class AuditAction(models.TextChoices):
     USER_UPDATED = "user_updated", "Benutzer geändert"
     USER_DEACTIVATED = "user_deactivated", "Benutzer deaktiviert"
     USER_ACTIVATED = "user_activated", "Benutzer aktiviert"
+    PROJECT_CREATED = "project_created", "Projekt angelegt"
+    PROJECT_UPDATED = "project_updated", "Projekt geändert"
+    PROJECT_ASSIGNED = "project_assigned", "Projekt zugewiesen"
+    PROJECT_UNASSIGNED = "project_unassigned", "Projektzuweisung entfernt"
+    SENSOR_CREATED = "sensor_created", "Sensor angelegt"
+    SENSOR_UPDATED = "sensor_updated", "Sensor geändert"
+    SENSOR_DELETED = "sensor_deleted", "Sensor gelöscht"
+    SENSOR_IMPORTED = "sensor_imported", "Sensoren importiert"
 
 
 class AuditLog(models.Model):

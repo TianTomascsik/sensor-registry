@@ -1,0 +1,18 @@
+{% comment %}
+Wiederverwendbare Suchleiste (GET-Formular auf denselben Pfad).
+Aufruf: {% include "includes/_search.html" with placeholder="… suchen" %}
+{% endcomment %}
+<form method="get" class="mb-3" role="search">
+  <div class="input-group">
+    <span class="input-group-text"><i class="bi bi-search"></i></span>
+    <input type="search" name="q" class="form-control form-control-lg"
+           value="{{ request.GET.q|default:'' }}" placeholder="{{ placeholder }}"
+           aria-label="{{ placeholder }}">
+    <button type="submit" class="btn btn-primary">Suchen</button>
+    {% if request.GET.q %}
+    <a href="{{ request.path }}" class="btn btn-outline-secondary" title="Suche zurücksetzen">
+      <i class="bi bi-x-lg"></i>
+    </a>
+    {% endif %}
+  </div>
+</form>

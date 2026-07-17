@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}Projekte – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Projekte</h1>
+  {% if can_manage %}
+  <a href="{% url 'projects:create' %}" class="btn btn-primary btn-block-mobile">
+    <i class="bi bi-plus-lg me-1"></i>Projekt anlegen
+  </a>
+  {% endif %}
+</div>
+
+{% include "includes/_search.html" with placeholder="Nummer, Name, Kunde …" %}
+
+{% if projects %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Nummer</th>
+          <th scope="col">Name</th>
+          <th scope="col" class="d-none d-md-table-cell">Kunde</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for p in projects %}
+        <tr role="button" onclick="window.location='{% url 'projects:detail' p.pk %}'">
+          <td class="fw-medium">{{ p.number }}</td>
+          <td>
+            <a href="{% url 'projects:detail' p.pk %}" class="text-decoration-none">{{ p.name }}</a>
+            <div class="text-muted small d-md-none">{{ p.customer|default:"" }}</div>
+          </td>
+          <td class="d-none d-md-table-cell">{{ p.customer|default:"–" }}</td>
+          <td>{% include "projects/_status_badge.html" with status=p.status label=p.get_status_display %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "includes/_pagination.html" %}
+{% else %}
+<div class="alert alert-secondary">
+  {% if search %}Keine Projekte gefunden.{% else %}Noch keine Projekte vorhanden.{% endif %}
+</div>
+{% endif %}
+{% endblock %}

@@ -24,7 +24,17 @@
       </button>
       <div class="collapse navbar-collapse" id="mainnav">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'projects:list' %}">
+              <i class="bi bi-folder me-1"></i>Projekte
+            </a>
+          </li>
           {% if user.can_manage_users %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'sensors:list' %}">
+              <i class="bi bi-cpu me-1"></i>Sensoren
+            </a>
+          </li>
           <li class="nav-item">
             <a class="nav-link" href="{% url 'accounts:user_list' %}">
               <i class="bi bi-people me-1"></i>Benutzer

@@ -22,12 +22,16 @@ from __future__ import annotations
 from collections.abc import Iterator
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, TypeVar
 
 from django.db import models
 
 if TYPE_CHECKING:
     from apps.core.models import Tenant
+
+#: Typvariable für den konkreten mandantengebundenen Modelltyp, damit Manager und QuerySet
+#: den jeweiligen Modelltyp (z. B. Sensor, Project) statt der abstrakten Basis liefern.
+_M = TypeVar("_M", bound=models.Model)
 
 
 class _Sentinel:
@@ -130,7 +134,7 @@ def system_context() -> Iterator[None]:
         _current.reset(token)
 
 
-class TenantQuerySet(models.QuerySet["TenantModel"]):
+class TenantQuerySet(models.QuerySet[_M]):
     """QuerySet für mandantengebundene Modelle.
 
     Enthält keine Sonderlogik – die Filterung erfolgt zentral im Manager, damit sie sich
@@ -138,14 +142,14 @@ class TenantQuerySet(models.QuerySet["TenantModel"]):
     """
 
 
-class TenantManager(models.Manager["TenantModel"]):
+class TenantManager(models.Manager[_M]):
     """Standard-Manager mandantengebundener Modelle.
 
     Schränkt jede Abfrage automatisch auf den aktiven Mandanten ein. Ohne Kontext wird
     hart abgebrochen (fail-closed); im Systemkontext bleibt die Abfrage ungefiltert.
     """
 
-    def get_queryset(self) -> TenantQuerySet:
+    def get_queryset(self) -> TenantQuerySet[_M]:
         state = _current.get()
         if state is UNSET:
             raise TenantContextMissing(
@@ -153,7 +157,7 @@ class TenantManager(models.Manager["TenantModel"]):
                 "Fehlt eine umschließende tenant_context(...)/system_context()-Klammer "
                 "oder die TenantContextMiddleware?"
             )
-        qs = TenantQuerySet(self.model, using=self._db)
+        qs: TenantQuerySet[_M] = TenantQuerySet(self.model, using=self._db)
         if state is SYSTEM:
             return qs
         return qs.filter(tenant=state)
