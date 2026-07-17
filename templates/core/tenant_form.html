@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="d-flex align-items-center mb-3">
+      <a href="{% url 'core:tenant_list' %}" class="btn btn-link px-0 me-2">
+        <i class="bi bi-arrow-left"></i>
+      </a>
+      <h1 class="h3 mb-0">{{ title }}</h1>
+    </div>
+
+    {% if tenant_obj %}
+    <p class="text-muted">Kürzel <code>{{ tenant_obj.slug }}</code> (unveränderlich)</p>
+    {% endif %}
+
+    <div class="card">
+      <div class="card-body p-4">
+        <form method="post" novalidate>
+          {% csrf_token %}
+          {% include "includes/_form_fields.html" %}
+          <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn btn-primary btn-lg flex-grow-1">
+              <i class="bi bi-check-lg me-1"></i>Speichern
+            </button>
+            <a href="{% url 'core:tenant_list' %}" class="btn btn-outline-secondary btn-lg">Abbrechen</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

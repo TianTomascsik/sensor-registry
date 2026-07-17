@@ -1,0 +1,45 @@
+/* Anwendungsspezifische Ergänzungen zu Bootstrap 5 – bewusst schlank gehalten.
+   Grundhaltung: Mobile First, große Touch-Ziele, aufgeräumte Flächen. */
+
+:root {
+  --app-touch-min: 2.75rem; /* fingerfreundliche Mindesthöhe für Bedienelemente */
+}
+
+body {
+  min-height: 100vh;
+}
+
+/* Fingerfreundliche Bedienelemente: mittelgroße Buttons, große Formulare. */
+.btn,
+.form-control,
+.form-select {
+  min-height: var(--app-touch-min);
+}
+
+/* Haupt-Aktionsbuttons auf schmalen Viewports über die volle Breite. */
+@media (max-width: 575.98px) {
+  .btn-block-mobile {
+    display: block;
+    width: 100%;
+  }
+}
+
+/* Etwas Luft unter der fixierten Navigationsleiste. */
+main.app-content {
+  padding-top: 1.25rem;
+  padding-bottom: 3rem;
+}
+
+/* Karten in Listen dezent abheben. */
+.list-card {
+  transition: box-shadow 0.15s ease-in-out;
+}
+.list-card:hover {
+  box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.08);
+}
+
+/* Statusabzeichen einheitlich. */
+.badge-status {
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}

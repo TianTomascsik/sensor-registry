@@ -1,0 +1,75 @@
+[project]
+name = "papa"
+version = "0.1.0"
+description = "Multi-Mandanten-Dokumentation von LoRaWAN-Bodensensor-Installationen"
+readme = "README.md"
+requires-python = "==3.13.*"
+dependencies = [
+    "django==5.2.*",
+    "djangorestframework==3.16.*",
+    "psycopg[binary]==3.2.*",
+    "pillow==11.*",
+    "django-environ==0.12.*",
+    "django-ratelimit==4.1.*",
+    # Ermöglicht generische Class-Based-Views (z. B. ListView[User]) zur Laufzeit,
+    # passend zu den django-stubs-Typannotationen. Leichtgewichtig und rein Python.
+    "django-stubs-ext==5.1.*",
+    "gunicorn==23.*",
+    "qrcode[pil]==8.*",
+    "openpyxl==3.1.*",
+    "weasyprint==65.*",
+]
+
+[dependency-groups]
+dev = [
+    "pytest==8.3.*",
+    "pytest-django==4.9.*",
+    "factory-boy==3.3.*",
+    "ruff==0.9.*",
+    "mypy==1.14.*",
+    "django-stubs[compatible-mypy]==5.1.*",
+    "djangorestframework-stubs==3.15.*",
+]
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["*/migrations/*"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "DJ", "C4", "PIE", "RUF"]
+# RUF012: Django-Model-Attribute sind bewusst veränderliche Klassenattribute.
+# DJ012: TenantModel benötigt zwei Manager (gefiltert + ungefiltert) – Reihenfolge gewollt.
+ignore = ["RUF012", "DJ012"]
+# Deutscher Gedankenstrich (EN DASH) ist gewollte Typografie in Docstrings/Kommentaren.
+allowed-confusables = ["–"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["apps", "config"]
+
+[tool.mypy]
+python_version = "3.13"
+plugins = ["mypy_django_plugin.main", "mypy_drf_plugin.main"]
+strict = true
+warn_return_any = false
+disallow_untyped_decorators = false
+exclude = ['migrations/', 'tests/', 'conftest\.py', 'manage\.py']
+
+[[tool.mypy.overrides]]
+module = [
+    "environ.*",
+    "qrcode.*",
+    "weasyprint.*",
+    "django_ratelimit.*",
+    "factory.*",
+]
+ignore_missing_imports = true
+
+[tool.django-stubs]
+django_settings_module = "config.settings.dev"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings.test"
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "--reuse-db --strict-markers"
+testpaths = ["apps"]

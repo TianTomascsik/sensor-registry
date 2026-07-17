@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Nicht gefunden – {{ app_name }}{% endblock %}
+{% block content %}
+<div class="text-center py-5">
+  <i class="bi bi-question-circle display-4 text-secondary"></i>
+  <h1 class="h3 mt-3">Seite nicht gefunden</h1>
+  <p class="text-muted">Die angeforderte Seite existiert nicht.</p>
+  <a href="{% url 'core:dashboard' %}" class="btn btn-primary">Zur Übersicht</a>
+</div>
+{% endblock %}

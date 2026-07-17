@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Mandanten – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Mandanten</h1>
+  <a href="{% url 'core:tenant_create' %}" class="btn btn-primary btn-block-mobile">
+    <i class="bi bi-plus-lg me-1"></i>Mandant anlegen
+  </a>
+</div>
+
+{% if tenants %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col" class="d-none d-md-table-cell">Kürzel</th>
+          <th scope="col" class="d-none d-lg-table-cell">GPS-Grenze</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="text-end">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for t in tenants %}
+        <tr>
+          <td class="fw-medium">{{ t.name }}</td>
+          <td class="d-none d-md-table-cell"><code>{{ t.slug }}</code></td>
+          <td class="d-none d-lg-table-cell">{{ t.gps_accuracy_threshold_m }} m</td>
+          <td>
+            {% if t.is_active %}
+            <span class="badge text-bg-success badge-status">Aktiv</span>
+            {% else %}
+            <span class="badge text-bg-danger badge-status">Inaktiv</span>
+            {% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            <a href="{% url 'core:tenant_update' t.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i><span class="d-none d-sm-inline ms-1">Bearbeiten</span>
+            </a>
+            <form method="post" action="{% url 'core:tenant_toggle_active' t.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit"
+                      class="btn btn-sm {% if t.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                {% if t.is_active %}<i class="bi bi-slash-circle"></i>{% else %}<i class="bi bi-check-circle"></i>{% endif %}
+                <span class="d-none d-sm-inline ms-1">{% if t.is_active %}Deaktivieren{% else %}Aktivieren{% endif %}</span>
+              </button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "includes/_pagination.html" %}
+{% else %}
+<div class="alert alert-secondary">Noch keine Mandanten vorhanden.</div>
+{% endif %}
+{% endblock %}

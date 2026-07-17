@@ -1,0 +1,25 @@
+# Nur für die lokale Entwicklung: stellt eine PostgreSQL-Datenbank bereit,
+# die zur .env-Standardkonfiguration (DATABASE_URL) passt.
+#
+# Start:  docker compose -f deploy/docker/docker-compose.dev.yml up -d
+# Stopp:  docker compose -f deploy/docker/docker-compose.dev.yml down
+services:
+  db:
+    image: postgres:16
+    container_name: papa-dev-db
+    environment:
+      POSTGRES_DB: papa
+      POSTGRES_USER: papa
+      POSTGRES_PASSWORD: papa
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - papa_dev_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U papa -d papa"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  papa_dev_pgdata:

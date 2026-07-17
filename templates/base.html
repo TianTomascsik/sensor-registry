@@ -1,0 +1,103 @@
+{% load static %}<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="color-scheme" content="light">
+  <title>{% block title %}{{ app_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
+  <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
+  <link rel="stylesheet" href="{% static 'css/app.css' %}">
+</head>
+<body class="bg-body-tertiary">
+  {% block chrome %}
+  <nav class="navbar navbar-expand-lg bg-primary" data-bs-theme="dark">
+    <div class="container">
+      <a class="navbar-brand fw-semibold" href="{% url 'core:dashboard' %}">
+        <i class="bi bi-geo-alt-fill me-1"></i>{{ app_name }}
+      </a>
+      {% if user.is_authenticated %}
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+              data-bs-target="#mainnav" aria-controls="mainnav"
+              aria-expanded="false" aria-label="Navigation umschalten">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="mainnav">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          {% if user.can_manage_users %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'accounts:user_list' %}">
+              <i class="bi bi-people me-1"></i>Benutzer
+            </a>
+          </li>
+          {% endif %}
+          {% if is_superadmin %}
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'core:tenant_list' %}">
+              <i class="bi bi-building me-1"></i>Mandanten
+            </a>
+          </li>
+          {% endif %}
+        </ul>
+
+        {% if is_superadmin %}
+        <form method="post" action="{% url 'core:tenant_switch' %}" class="d-flex me-lg-3 my-2 my-lg-0">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <select name="tenant" class="form-select form-select-sm" onchange="this.form.submit()"
+                  aria-label="Aktiven Mandanten wählen">
+            <option value="">Gesamtsicht (alle Mandanten)</option>
+            {% for t in available_tenants %}
+            <option value="{{ t.pk }}" {% if active_tenant and active_tenant.pk == t.pk %}selected{% endif %}>
+              {{ t.name }}
+            </option>
+            {% endfor %}
+          </select>
+        </form>
+        {% elif active_tenant %}
+        <span class="navbar-text me-lg-3 small">
+          <i class="bi bi-building me-1"></i>{{ active_tenant.name }}
+        </span>
+        {% endif %}
+
+        <div class="dropdown">
+          <a class="nav-link dropdown-toggle text-white" href="#" role="button"
+             data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-person-circle me-1"></i>{{ user.full_name }}
+          </a>
+          <ul class="dropdown-menu dropdown-menu-end">
+            <li><span class="dropdown-item-text small text-muted">{{ user.get_role_display }}</span></li>
+            <li><hr class="dropdown-divider"></li>
+            <li>
+              <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="dropdown-item">
+                  <i class="bi bi-box-arrow-right me-1"></i>Abmelden
+                </button>
+              </form>
+            </li>
+          </ul>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </nav>
+  {% endblock chrome %}
+
+  <main class="container app-content">
+    {% if messages %}
+      {% for message in messages %}
+      <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Schließen"></button>
+      </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{% static 'vendor/bootstrap/bootstrap.bundle.min.js' %}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

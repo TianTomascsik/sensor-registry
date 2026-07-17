@@ -1,0 +1,19 @@
+{% comment %}
+Rendert die Felder eines Formulars als Bootstrap-Formulargruppen inkl. Fehleranzeige.
+Erwartet die Variable `form`.
+{% endcomment %}
+{% if form.non_field_errors %}
+<div class="alert alert-danger">
+  {% for error in form.non_field_errors %}<div>{{ error }}</div>{% endfor %}
+</div>
+{% endif %}
+{% for field in form %}
+<div class="mb-3">
+  <label for="{{ field.id_for_label }}" class="form-label fw-medium">{{ field.label }}</label>
+  {{ field }}
+  {% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+  {% for error in field.errors %}
+  <div class="invalid-feedback d-block">{{ error }}</div>
+  {% endfor %}
+</div>
+{% endfor %}

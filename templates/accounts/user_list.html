@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Benutzer – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Benutzer</h1>
+  <a href="{% url 'accounts:user_create' %}" class="btn btn-primary btn-block-mobile">
+    <i class="bi bi-person-plus me-1"></i>Benutzer anlegen
+  </a>
+</div>
+
+{% if not active_tenant and is_superadmin %}
+<div class="alert alert-info">
+  Gesamtsicht: Benutzer aller Mandanten. Zum Anlegen bitte oben einen Mandanten wählen.
+</div>
+{% endif %}
+
+{% if users %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">Name</th>
+          <th scope="col" class="d-none d-md-table-cell">E-Mail</th>
+          {% if not active_tenant %}<th scope="col" class="d-none d-lg-table-cell">Mandant</th>{% endif %}
+          <th scope="col">Rolle</th>
+          <th scope="col">Status</th>
+          <th scope="col" class="text-end">Aktionen</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td>
+            <div class="fw-medium">{{ u.full_name }}</div>
+            <div class="text-muted small d-md-none">{{ u.email }}</div>
+          </td>
+          <td class="d-none d-md-table-cell">{{ u.email }}</td>
+          {% if not active_tenant %}
+          <td class="d-none d-lg-table-cell">{{ u.tenant.name|default:"–" }}</td>
+          {% endif %}
+          <td><span class="badge text-bg-secondary badge-status">{{ u.get_role_display }}</span></td>
+          <td>
+            {% if u.is_active %}
+            <span class="badge text-bg-success badge-status">Aktiv</span>
+            {% else %}
+            <span class="badge text-bg-danger badge-status">Inaktiv</span>
+            {% endif %}
+          </td>
+          <td class="text-end text-nowrap">
+            <a href="{% url 'accounts:user_update' u.pk %}" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-pencil"></i><span class="d-none d-sm-inline ms-1">Bearbeiten</span>
+            </a>
+            {% if u != user %}
+            <form method="post" action="{% url 'accounts:user_toggle_active' u.pk %}" class="d-inline">
+              {% csrf_token %}
+              <button type="submit"
+                      class="btn btn-sm {% if u.is_active %}btn-outline-danger{% else %}btn-outline-success{% endif %}">
+                {% if u.is_active %}<i class="bi bi-slash-circle"></i>{% else %}<i class="bi bi-check-circle"></i>{% endif %}
+                <span class="d-none d-sm-inline ms-1">{% if u.is_active %}Deaktivieren{% else %}Aktivieren{% endif %}</span>
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "includes/_pagination.html" %}
+{% else %}
+<div class="alert alert-secondary">Noch keine Benutzer vorhanden.</div>
+{% endif %}
+{% endblock %}

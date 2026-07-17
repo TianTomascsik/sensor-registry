@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Übersicht – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1">Willkommen, {{ user.full_name }}</h1>
+    <p class="text-muted mb-0">
+      {{ user.get_role_display }}{% if active_tenant %} · {{ active_tenant.name }}{% endif %}
+    </p>
+  </div>
+</div>
+
+<div class="row g-3">
+  {% if user.can_manage_users %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <a href="{% url 'accounts:user_list' %}" class="text-decoration-none">
+      <div class="card list-card h-100">
+        <div class="card-body">
+          <i class="bi bi-people fs-2 text-primary"></i>
+          <h2 class="h5 mt-2 mb-1">Benutzer</h2>
+          <p class="text-muted mb-0 small">Benutzer anlegen, bearbeiten und (de-)aktivieren.</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+
+  {% if is_superadmin %}
+  <div class="col-12 col-md-6 col-lg-4">
+    <a href="{% url 'core:tenant_list' %}" class="text-decoration-none">
+      <div class="card list-card h-100">
+        <div class="card-body">
+          <i class="bi bi-building fs-2 text-primary"></i>
+          <h2 class="h5 mt-2 mb-1">Mandanten</h2>
+          <p class="text-muted mb-0 small">Firmen verwalten und aktiven Mandanten wählen.</p>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}
