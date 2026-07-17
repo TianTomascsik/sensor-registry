@@ -60,6 +60,7 @@ module = [
     "environ.*",
     "qrcode.*",
     "weasyprint.*",
+    "openpyxl.*",
     "django_ratelimit.*",
     "factory.*",
 ]

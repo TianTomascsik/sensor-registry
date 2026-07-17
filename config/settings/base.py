@@ -50,6 +50,7 @@ LOCAL_APPS = [
     "apps.sensors",
     "apps.installations",
     "apps.pwa",
+    "apps.exports",
 ]
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
 

@@ -6,7 +6,25 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
   <h1 class="h3 mb-0">Suche</h1>
   <div class="d-flex gap-2">
-    <a href="{% url 'installations:map' %}" class="btn btn-outline-primary">
+    {% if user.can_manage_users %}
+    {% comment %}Aktuelle Filter für die Export-Links erhalten (ohne page/format).{% endcomment %}
+    {% with q=request.GET.urlencode %}
+    <div class="dropdown">
+      <button class="btn btn-outline-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+        <i class="bi bi-download me-1"></i>Exportieren
+      </button>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" href="{% url 'exports:search' %}?{{ q }}&format=pdf">PDF-Bericht</a></li>
+        <li><a class="dropdown-item" href="{% url 'exports:search' %}?{{ q }}&format=csv">CSV</a></li>
+        <li><a class="dropdown-item" href="{% url 'exports:search' %}?{{ q }}&format=xlsx">Excel</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="{% url 'exports:search' %}?{{ q }}&format=gpx">GPX</a></li>
+        <li><a class="dropdown-item" href="{% url 'exports:search' %}?{{ q }}&format=kml">KML</a></li>
+      </ul>
+    </div>
+    {% endwith %}
+    {% endif %}
+    <a href="{% url 'installations:map' %}" class="btn btn-outline-secondary">
       <i class="bi bi-map me-1"></i>Karte
     </a>
     <a href="{% url 'installations:list' %}" class="btn btn-outline-secondary">

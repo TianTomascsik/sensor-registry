@@ -44,6 +44,7 @@ class AuditAction(models.TextChoices):
     INSTALLATION_CORRECTED = "installation_corrected", "Installation korrigiert"
     INSTALLATION_CANCELLED = "installation_cancelled", "Installation storniert"
     INSTALLATION_PHOTO_ADDED = "installation_photo_added", "Foto hinzugefügt"
+    EXPORT_CREATED = "export_created", "Export erstellt"
 
 
 class AuditLog(models.Model):
