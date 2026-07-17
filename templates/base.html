@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="{% static 'vendor/bootstrap/bootstrap.min.css' %}">
   <link rel="stylesheet" href="{% static 'vendor/bootstrap-icons/bootstrap-icons.min.css' %}">
   <link rel="stylesheet" href="{% static 'css/app.css' %}">
+  {% block extra_head %}{% endblock %}
 </head>
 <body class="bg-body-tertiary">
   {% block chrome %}
@@ -32,6 +33,11 @@
           <li class="nav-item">
             <a class="nav-link" href="{% url 'installations:list' %}">
               <i class="bi bi-geo-alt me-1"></i>Installationen
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="{% url 'installations:map' %}">
+              <i class="bi bi-map me-1"></i>Karte
             </a>
           </li>
           {% if user.can_manage_users %}

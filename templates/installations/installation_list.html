@@ -5,9 +5,17 @@
 {% block content %}
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
   <h1 class="h3 mb-0">Installationen</h1>
-  <a href="{% url 'installations:capture' %}" class="btn btn-primary">
-    <i class="bi bi-plus-lg me-1"></i>Erfassen
-  </a>
+  <div class="d-flex gap-2">
+    <a href="{% url 'installations:map' %}" class="btn btn-outline-primary">
+      <i class="bi bi-map me-1"></i>Karte
+    </a>
+    <a href="{% url 'installations:search' %}" class="btn btn-outline-primary">
+      <i class="bi bi-search me-1"></i>Suche
+    </a>
+    <a href="{% url 'installations:capture' %}" class="btn btn-primary">
+      <i class="bi bi-plus-lg me-1"></i>Erfassen
+    </a>
+  </div>
 </div>
 
 {% include "includes/_search.html" with placeholder="DevEUI, Projekt, Beschreibung …" %}

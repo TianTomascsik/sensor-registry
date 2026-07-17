@@ -6,7 +6,7 @@ verbaut wurde – inklusive GPS-Position und Fotos.
 
 Diese Anwendung wird schrittweise (in Phasen) entwickelt. Jede Phase ist vollständig
 lauffähig, getestet und dokumentiert. Der aktuelle Stand ist
-**Phase 4 (Installationen & Fotos)**.
+**Phase 5 (Karte & Suche)**.
 
 ## Technologie
 
@@ -87,3 +87,4 @@ docs/              Installations- und Phasendokumentation
 - [docs/PHASE-2.md](docs/PHASE-2.md) – Umfang, Entscheidungen und Tests der Phase 2
 - [docs/PHASE-3.md](docs/PHASE-3.md) – Umfang, Entscheidungen und Tests der Phase 3
 - [docs/PHASE-4.md](docs/PHASE-4.md) – Umfang, Entscheidungen und Tests der Phase 4
+- [docs/PHASE-5.md](docs/PHASE-5.md) – Umfang, Entscheidungen und Tests der Phase 5

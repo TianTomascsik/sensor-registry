@@ -10,6 +10,7 @@ from __future__ import annotations
 import uuid
 
 from django.conf import settings
+from django.contrib.postgres.indexes import GinIndex
 from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
@@ -106,6 +107,12 @@ class Installation(TenantModel):
             models.Index(fields=["tenant", "-received_at"]),
             models.Index(fields=["sensor"]),
             models.Index(fields=["project"]),
+            # Beschleunigt die Volltext-/Teilstring-Suche in der Beschreibung.
+            GinIndex(
+                name="installation_desc_trgm",
+                fields=["description"],
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self) -> str:

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.contrib.postgres.indexes import GinIndex
 from django.core.validators import RegexValidator
 from django.db import models
 
@@ -59,6 +60,12 @@ class Sensor(TenantModel):
         ]
         indexes = [
             models.Index(fields=["tenant", "dev_eui"]),
+            # Beschleunigt die Teilstring-Suche nach DevEUI (icontains).
+            GinIndex(
+                name="sensor_dev_eui_trgm",
+                fields=["dev_eui"],
+                opclasses=["gin_trgm_ops"],
+            ),
         ]
 
     def __str__(self) -> str:

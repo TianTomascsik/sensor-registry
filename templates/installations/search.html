@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Suche – {{ app_name }}{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Suche</h1>
+  <div class="d-flex gap-2">
+    <a href="{% url 'installations:map' %}" class="btn btn-outline-primary">
+      <i class="bi bi-map me-1"></i>Karte
+    </a>
+    <a href="{% url 'installations:list' %}" class="btn btn-outline-secondary">
+      <i class="bi bi-list me-1"></i>Liste
+    </a>
+  </div>
+</div>
+
+<div class="card mb-3">
+  <div class="card-body">
+    <form method="get" class="row g-2 align-items-end">
+      <div class="col-12 col-md-4">
+        <label for="{{ form.q.id_for_label }}" class="form-label">{{ form.q.label }}</label>
+        {{ form.q }}
+      </div>
+      <div class="col-6 col-md-4">
+        <label for="{{ form.project.id_for_label }}" class="form-label">{{ form.project.label }}</label>
+        {{ form.project }}
+      </div>
+      <div class="col-6 col-md-4">
+        <label for="{{ form.installer.id_for_label }}" class="form-label">{{ form.installer.label }}</label>
+        {{ form.installer }}
+      </div>
+      <div class="col-6 col-md-3">
+        <label for="{{ form.deveui.id_for_label }}" class="form-label">{{ form.deveui.label }}</label>
+        {{ form.deveui }}
+      </div>
+      <div class="col-6 col-md-3">
+        <label for="{{ form.date_from.id_for_label }}" class="form-label">{{ form.date_from.label }}</label>
+        {{ form.date_from }}
+      </div>
+      <div class="col-6 col-md-3">
+        <label for="{{ form.date_to.id_for_label }}" class="form-label">{{ form.date_to.label }}</label>
+        {{ form.date_to }}
+      </div>
+      <div class="col-6 col-md-3 d-flex gap-2">
+        <button type="submit" class="btn btn-primary flex-grow-1">
+          <i class="bi bi-search me-1"></i>Suchen
+        </button>
+        <a href="{% url 'installations:search' %}" class="btn btn-outline-secondary" title="Zurücksetzen">
+          <i class="bi bi-x-lg"></i>
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<p class="text-muted">{{ page_obj.paginator.count }} Ergebnis(se)</p>
+
+{% if installations %}
+<div class="card">
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead>
+        <tr>
+          <th scope="col">DevEUI</th>
+          <th scope="col" class="d-none d-md-table-cell">Projekt</th>
+          <th scope="col" class="d-none d-lg-table-cell">Monteur</th>
+          <th scope="col">Datum</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for i in installations %}
+        <tr role="button" onclick="window.location='{% url 'installations:detail' i.pk %}'">
+          <td class="fw-medium"><code>{{ i.sensor.dev_eui }}</code></td>
+          <td class="d-none d-md-table-cell">{{ i.project.number }}</td>
+          <td class="d-none d-lg-table-cell">{{ i.installer.full_name }}</td>
+          <td>{{ i.received_at|date:"d.m.Y" }}</td>
+          <td>{% include "installations/_status_badge.html" with installation=i %}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% include "includes/_pagination.html" %}
+{% else %}
+<div class="alert alert-secondary">Keine Installationen für diese Suche.</div>
+{% endif %}
+{% endblock %}
