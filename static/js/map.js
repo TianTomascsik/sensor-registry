@@ -29,9 +29,17 @@ async function render(el, L) {
 
   // Karte ohne Fixzentrum initialisieren; Auto-Zoom erfolgt über die Marker-Grenzen.
   const map = L.map(el).setView([46.8, 8.2], 7);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap-Mitwirkende",
-    maxZoom: 19,
+  // Tile-Quelle ist konfigurierbar (Dev: OpenStreetMap, Prod: eigener Server/Provider mit
+  // Key) und kommt aus den Server-Einstellungen über Datenattribute.
+  const tileUrl = el.dataset.tileUrl || "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
+  L.tileLayer(tileUrl, {
+    attribution: el.dataset.tileAttribution || "&copy; OpenStreetMap-Mitwirkende",
+    maxZoom: parseInt(el.dataset.tileMaxZoom, 10) || 19,
+    // Die App setzt global Referrer-Policy "same-origin" (Härtung). Cross-Origin-Kacheln
+    // gingen damit refererlos an den Tile-Server – OSMs Nutzungsrichtlinie blockt das mit
+    // HTTP 403. Pro Kachel-<img> senden wir daher zumindest den Origin als Referer; die
+    // globale Policy für alle übrigen Anfragen bleibt unverändert.
+    referrerPolicy: "strict-origin-when-cross-origin",
   }).addTo(map);
 
   let installations;

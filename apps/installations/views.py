@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import datetime, time
 from typing import Any
 
+from django.conf import settings
 from django.contrib import messages
 from django.http import Http404, HttpRequest, HttpResponse, HttpResponseRedirect
 from django.shortcuts import redirect
@@ -72,6 +73,13 @@ class InstallationMapView(AuthenticatedViewMixin, TemplateView):
     """Kartenansicht der aktiven Installationen (Leaflet). Die Daten lädt das Skript."""
 
     template_name = "installations/map.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context = super().get_context_data(**kwargs)
+        context["map_tile_url"] = settings.MAP_TILE_URL
+        context["map_tile_attribution"] = settings.MAP_TILE_ATTRIBUTION
+        context["map_tile_max_zoom"] = settings.MAP_TILE_MAX_ZOOM
+        return context
 
 
 class InstallationSearchView(AuthenticatedViewMixin, ListView[Installation]):

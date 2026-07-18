@@ -196,6 +196,15 @@ REST_FRAMEWORK = {
 # Standard-Grenzwert für die GPS-Genauigkeit (Meter); pro Mandant überschreibbar.
 GPS_ACCURACY_DEFAULT_THRESHOLD_M = 5
 
+# --- Karte (Tile-Quelle) ---
+# Standard ist OpenStreetMap – nur für Entwicklung/leichte Nutzung geeignet. Für die
+# Produktion einen eigenen Tile-Server oder einen Provider mit API-Key setzen: OSMs
+# Volunteer-Server dürfen laut Nutzungsrichtlinie nicht produktiv verwendet werden und
+# blocken solche Zugriffe (HTTP 403). Die URL folgt dem Leaflet-Schema mit {s}/{z}/{x}/{y}.
+MAP_TILE_URL = env.str("MAP_TILE_URL", default="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+MAP_TILE_ATTRIBUTION = env.str("MAP_TILE_ATTRIBUTION", default="&copy; OpenStreetMap-Mitwirkende")
+MAP_TILE_MAX_ZOOM = env.int("MAP_TILE_MAX_ZOOM", default=19)
+
 # --- Geräteanmeldung (Monteure) ---
 # Cookie-Name des Gerätetokens. In Produktion wird der __Host-Präfix verwendet (siehe prod.py),
 # der Secure + Path=/ + kein Domain-Attribut voraussetzt.

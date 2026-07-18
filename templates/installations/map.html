@@ -30,6 +30,9 @@
 <div id="map"
      data-url="{% url 'api:installation_map' %}"
      data-detail-url="{% url 'installations:detail' 0 %}"
+     data-tile-url="{{ map_tile_url }}"
+     data-tile-attribution="{{ map_tile_attribution }}"
+     data-tile-max-zoom="{{ map_tile_max_zoom }}"
      data-marker-icon="{% static 'vendor/leaflet/images/marker-icon.png' %}"
      data-marker-icon-2x="{% static 'vendor/leaflet/images/marker-icon-2x.png' %}"
      data-marker-shadow="{% static 'vendor/leaflet/images/marker-shadow.png' %}"></div>

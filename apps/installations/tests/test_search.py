@@ -6,7 +6,7 @@ import uuid
 from decimal import Decimal
 
 import pytest
-from django.test import Client
+from django.test import Client, override_settings
 from django.urls import reverse
 from django.utils import timezone
 
@@ -92,3 +92,14 @@ def test_suche_ist_mandantengetrennt(admin_b_client: Client, data: dict) -> None
 def test_karten_und_suchseite_rendern(admin_a_client: Client, data: dict) -> None:
     assert admin_a_client.get(reverse("installations:map")).status_code == 200
     assert admin_a_client.get(reverse("installations:search")).status_code == 200
+
+
+@override_settings(
+    MAP_TILE_URL="https://tiles.example.com/{z}/{x}/{y}.png?key=abc",
+    MAP_TILE_MAX_ZOOM=17,
+)
+def test_karte_nutzt_konfigurierte_tile_quelle(admin_a_client: Client, data: dict) -> None:
+    """Die Tile-Quelle ist über Einstellungen konfigurierbar (Prod: eigener Provider)."""
+    html = admin_a_client.get(reverse("installations:map")).content.decode()
+    assert 'data-tile-url="https://tiles.example.com/{z}/{x}/{y}.png?key=abc"' in html
+    assert 'data-tile-max-zoom="17"' in html
