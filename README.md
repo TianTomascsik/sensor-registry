@@ -45,14 +45,32 @@ docker compose -f deploy/docker/docker-compose.dev.yml up -d
 # 4. Datenbankschema anlegen
 uv run python manage.py migrate
 
-# 5. Ersten Superadmin anlegen
-uv run python manage.py createsuperuser
+# 5. Entwicklungskonten und Demodaten anlegen (idempotent, nur unter DEBUG)
+uv run python manage.py seed_dev
 
 # 6. Entwicklungsserver starten
 uv run python manage.py runserver
 ```
 
 Die Anwendung ist anschließend unter <http://127.0.0.1:8000/> erreichbar.
+
+### Entwicklungskonten (`seed_dev`)
+
+`seed_dev` legt je ein Konto pro Rolle sowie ein Demo-Projekt, einen Demo-Sensor und die
+zugehörige Projektzuweisung an (der Monteur sieht das Projekt nur, weil er ihm zugewiesen
+ist). Der Befehl ist idempotent – wiederholtes Ausführen aktualisiert nur und setzt die
+Passwörter zurück. Zum Schutz vor schwachen Passwörtern verweigert er die Ausführung
+außerhalb von `DEBUG` (Umgehung nur mit `--force`, Passwort per `--password`).
+
+| Rolle | E-Mail | Mandant | Passwort |
+| --- | --- | --- | --- |
+| Superadmin | `superadmin@dev.local` | – | `dev12345` |
+| Mandantenadministrator | `admin@dev.local` | Demo GmbH | `dev12345` |
+| Monteur | `monteur@dev.local` | Demo GmbH | `dev12345` |
+
+Zum Testen der mobilen Erfassung als **`monteur@dev.local`** anmelden – dieser hat einen
+festen Mandanten, sodass der Mandantenkontext gesetzt ist. Alternativ legt
+`uv run python manage.py createsuperuser` nur einen einzelnen Superadmin an (ohne Demodaten).
 
 ## Qualitätssicherung
 
