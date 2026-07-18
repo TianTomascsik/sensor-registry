@@ -188,6 +188,8 @@ REST_FRAMEWORK = {
         "sync": "120/min",
     },
     "UNAUTHENTICATED_USER": None,
+    # Fehlender Mandantenkontext (Superadmin ohne gewählten Mandanten) → klare 409 statt 500.
+    "EXCEPTION_HANDLER": "apps.core.drf.tenant_aware_exception_handler",
 }
 
 # --- Fachliche Standardwerte ---

@@ -153,6 +153,18 @@ def test_api_erfordert_authentifizierung(sensor_a: Sensor, project_a: Project) -
     assert response.status_code in (401, 403)
 
 
+def test_api_erfassung_ohne_mandantenkontext_liefert_409(
+    superadmin_client: Client, sensor_a: Sensor, project_a: Project
+) -> None:
+    """Superadmin ohne gewählten Mandanten (System-/kontextloser Zustand): Das Schreiben hat
+    keinen Mandanten zum Zuordnen. Statt HTTP 500 muss eine klare 409-Antwort kommen."""
+    response = _post_json(
+        superadmin_client, reverse("api:installation_create"), _create_payload(sensor_a, project_a)
+    )
+    assert response.status_code == 409
+    assert not Installation.unscoped.exists()
+
+
 def test_geschuetztes_foto_zugriff_und_isolation(
     installer_device: tuple[Client, User],
     sensor_a: Sensor,
