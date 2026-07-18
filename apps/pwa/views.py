@@ -9,7 +9,10 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 
+from django.conf import settings
+from django.contrib.staticfiles import finders
 from django.http import HttpRequest, HttpResponse, JsonResponse
 from django.templatetags.static import static
 from django.urls import reverse
@@ -24,6 +27,7 @@ _PRECACHE_STATIC = [
     "vendor/bootstrap-icons/bootstrap-icons.min.css",
     "vendor/bootstrap-icons/fonts/bootstrap-icons.woff2",
     "js/capture.js",
+    "js/map.js",
     "js/pwa/idb.js",
     "js/pwa/outbox.js",
     "js/pwa/register.js",
@@ -39,6 +43,24 @@ def _precache_asset_urls() -> list[str]:
 def _shell_page_urls() -> list[str]:
     """App-Seiten, die für den Offline-Betrieb (best effort) gecacht werden."""
     return [reverse("installations:capture"), reverse("core:dashboard")]
+
+
+def _cache_fingerprint(assets: list[str], pages: list[str]) -> str:
+    """Grundlage der Cache-Version.
+
+    In Produktion sind die Asset-URLs gehasht – Inhaltsänderungen schlagen sich bereits in der
+    URL nieder, sodass die Version automatisch wechselt. In der Entwicklung sind die URLs
+    stabil; damit der Service Worker nach jeder Asset-Änderung dennoch erneuert wird (statt
+    veraltetes JavaScript cache-first auszuliefern), fließen dort zusätzlich die
+    Änderungszeiten der Quelldateien ein.
+    """
+    parts = [*assets, *pages]
+    if settings.DEBUG:
+        for path in _PRECACHE_STATIC:
+            absolute = finders.find(path)
+            if absolute:
+                parts.append(f"{path}:{Path(absolute).stat().st_mtime_ns}")
+    return "\n".join(parts)
 
 
 def manifest(request: HttpRequest) -> JsonResponse:
@@ -73,9 +95,9 @@ def service_worker(request: HttpRequest) -> HttpResponse:
     """Rendert den Service Worker (mit Precache-Liste und Cache-Version) im Root-Scope."""
     assets = _precache_asset_urls()
     pages = _shell_page_urls()
-    # Cache-Version aus dem Inhalt der Precache-Liste ableiten: ändern sich (gehashte) Assets,
-    # ändert sich die Version und der Service Worker erneuert den Cache.
-    fingerprint = "\n".join(assets + pages)
+    # Cache-Version aus Precache-Liste (und in DEBUG den Datei-Änderungszeiten) ableiten:
+    # ändern sich Assets, ändert sich die Version und der Service Worker erneuert den Cache.
+    fingerprint = _cache_fingerprint(assets, pages)
     cache_version = hashlib.sha256(fingerprint.encode("utf-8")).hexdigest()[:12]
 
     from django.template.loader import render_to_string
