@@ -72,6 +72,56 @@ Zum Testen der mobilen Erfassung als **`monteur@dev.local`** anmelden – dieser
 festen Mandanten, sodass der Mandantenkontext gesetzt ist. Alternativ legt
 `uv run python manage.py createsuperuser` nur einen einzelnen Superadmin an (ohne Demodaten).
 
+## Kartenkacheln (Tile-Quelle)
+
+Die Kartenansicht (Leaflet) lädt ihre Kacheln über eine konfigurierbare Tile-Quelle. Sie ist
+per Umgebungsvariablen einstellbar:
+
+| Variable | Bedeutung | Default |
+| --- | --- | --- |
+| `MAP_TILE_URL` | Kachel-URL im Leaflet-Schema (`{s}` = Subdomain, optional; `{z}/{x}/{y}`) | OpenStreetMap |
+| `MAP_TILE_ATTRIBUTION` | Quellennachweis am Kartenrand (HTML erlaubt, z. B. `&copy;`) | `&copy; OpenStreetMap-Mitwirkende` |
+| `MAP_TILE_MAX_ZOOM` | maximale Zoomstufe | `19` |
+
+**Warum nicht einfach OpenStreetMap?** OSMs Volunteer-Tile-Server dürfen laut
+[Nutzungsrichtlinie](https://operations.osmfoundation.org/policies/tiles/) nicht produktiv
+genutzt werden und blocken solche Zugriffe – u. a. mit `HTTP 403` („Access blocked – Referer
+is required"), besonders **beim Zoomen**, wenn viele Kacheln gleichzeitig geladen werden. Die
+App sendet zwar pro Kachel einen Referer (nötig wegen der globalen `Referrer-Policy:
+same-origin`), das umgeht aber nur die Referer-Sperre, nicht die Mengenbegrenzung. Für alles
+außer leichtem Ausprobieren daher eine eigene Quelle setzen.
+
+### Anbieter-Beispiele
+
+Ohne API-Key (Entwicklung / leichte Nutzung – Attribution beachten):
+
+```bash
+# CARTO (OSM-basiert, schlüsselfrei) – Default in der mitgelieferten .env
+MAP_TILE_URL=https://{s}.basemap.cartocdn.com/light_all/{z}/{x}/{y}.png
+MAP_TILE_ATTRIBUTION=&copy; OpenStreetMap-Mitwirkende &copy; CARTO
+MAP_TILE_MAX_ZOOM=20
+```
+
+Mit API-Key (empfohlen für Produktion):
+
+```bash
+# MapTiler
+MAP_TILE_URL=https://api.maptiler.com/maps/streets/{z}/{x}/{y}.png?key=DEIN_KEY
+MAP_TILE_ATTRIBUTION=&copy; MapTiler &copy; OpenStreetMap-Mitwirkende
+
+# Thunderforest
+MAP_TILE_URL=https://{s}.tile.thunderforest.com/atlas/{z}/{x}/{y}.png?apikey=DEIN_KEY
+MAP_TILE_ATTRIBUTION=&copy; Thunderforest &copy; OpenStreetMap-Mitwirkende
+```
+
+Eigener Tile-Server (volle Kontrolle, kein Drittanbieter): z. B. das Docker-Image
+`overv/openstreetmap-tile-server` betreiben und
+`MAP_TILE_URL=https://tiles.example.com/{z}/{x}/{y}.png` setzen.
+
+> **Nach einer Änderung:** `.env` wird nur beim Start gelesen → Dev-Server neu starten. Und
+> `static/js/map.js` liegt im Service-Worker-Cache → die Karte einmal **hart neu laden** (bzw.
+> die PWA schließen und neu öffnen), damit die neue Quelle greift.
+
 ## Qualitätssicherung
 
 ```bash
