@@ -18,6 +18,42 @@ function escapeHtml(value) {
 
 const notifyChanged = () => window.dispatchEvent(new Event("papa:outbox-changed"));
 
+// Kleinräumige Distanz in Metern (Equirectangular-Näherung) – für wenige Meter genau genug.
+function distanceM(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const rad = Math.PI / 180;
+  const dLat = (lat2 - lat1) * rad;
+  const dLon = (lon2 - lon1) * rad * Math.cos(((lat1 + lat2) / 2) * rad);
+  return Math.sqrt(dLat * dLat + dLon * dLon) * R;
+}
+
+// Verrechnet eine Messreihe zu einer stabilisierten Position. Gewichtung 1/accuracy²
+// (Inverse-Varianz): präzise Fixe dominieren, grobe Ausreißer zählen kaum. Liefert zusätzlich
+// die beste Einzelgenauigkeit und die Streuung (größter Abstand einer Messung zum Mittel) als
+// Stabilitätsmaß. Erwartet mindestens eine Messung.
+function aggregateFix(samples) {
+  let wLat = 0;
+  let wLng = 0;
+  let wSum = 0;
+  let best = Infinity;
+  for (const s of samples) {
+    const a = Math.max(s.accuracy, 1); // gegen Division durch 0 / unrealistische Übergewichtung
+    const w = 1 / (a * a);
+    wLat += s.latitude * w;
+    wLng += s.longitude * w;
+    wSum += w;
+    best = Math.min(best, s.accuracy);
+  }
+  const latitude = wLat / wSum;
+  const longitude = wLng / wSum;
+  let spread = 0;
+  for (const s of samples) {
+    spread = Math.max(spread, distanceM(latitude, longitude, s.latitude, s.longitude));
+  }
+  const last = samples[samples.length - 1];
+  return { latitude, longitude, accuracy: best, spread, count: samples.length, timestamp: last.timestamp };
+}
+
 async function init(root) {
   const gpsThreshold = parseFloat(root.dataset.gpsThreshold) || 5;
   const detailTemplate = root.dataset.detailUrl; // endet auf /0/
@@ -34,7 +70,8 @@ async function init(root) {
   const statusBox = document.getElementById("captureStatus");
   const outboxEl = document.getElementById("outbox");
 
-  let bestFix = null;
+  let samples = []; // Serie roher GPS-Fixe der aktuellen Messung
+  let fix = null; // daraus abgeleitetes Aggregat (Ø-Position) – dieses wird gespeichert
   let photoFiles = [];
 
   // --- Auswahllisten aus dem Offline-Replikat füllen ---------------------
@@ -49,26 +86,45 @@ async function init(root) {
   }));
 
   const updateSubmitState = () => {
-    submitBtn.disabled = !(bestFix && photoFiles.length > 0);
+    submitBtn.disabled = !(fix && photoFiles.length > 0);
   };
 
   // --- GPS ---------------------------------------------------------------
-  const onPosition = (pos) => {
-    const { latitude, longitude, accuracy } = pos.coords;
-    if (!bestFix || accuracy < bestFix.accuracy) {
-      bestFix = { latitude, longitude, accuracy, timestamp: pos.timestamp };
-    }
+  // watchPosition liefert laufend Fixe. Statt einer Einzelmessung sammeln wir eine Serie und
+  // bilden daraus ein inverse-varianz-gewichtetes Mittel (siehe aggregateFix): präzise Fixe
+  // dominieren, grobe Ausreißer zählen kaum. Die Streuung zeigt, ob die Position stabil ist.
+  const RECENT_MAX = 30; // so viele jüngste Messungen fließen ins Mittel ein
+  const gpsReset = document.getElementById("gpsReset");
+
+  const renderGps = (current) => {
+    const trail = samples
+      .slice(-8)
+      .map((s) => `±${Math.round(s.accuracy)}`)
+      .join(" · ");
     gpsStatus.innerHTML =
-      `<strong>Genauigkeit:</strong> ±${Math.round(bestFix.accuracy)} m ` +
-      `<span class="text-muted">(${bestFix.latitude.toFixed(6)}, ${bestFix.longitude.toFixed(6)})</span>`;
-    if (bestFix.accuracy > gpsThreshold) {
+      `<div><strong>Aktuell:</strong> ±${Math.round(current)} m</div>` +
+      `<div><strong>Ergebnis (Ø aus ${fix.count}):</strong> ` +
+      `<span class="text-muted">(${fix.latitude.toFixed(6)}, ${fix.longitude.toFixed(6)})</span> · ` +
+      `beste ±${Math.round(fix.accuracy)} m · Streuung ±${Math.round(fix.spread)} m</div>` +
+      `<div class="text-muted small">Verlauf (m): ${trail}</div>`;
+    if (fix.accuracy > gpsThreshold) {
       gpsWarning.textContent =
-        `Die Genauigkeit (±${Math.round(bestFix.accuracy)} m) ist schlechter als der ` +
-        `Grenzwert von ${gpsThreshold} m. Bitte möglichst im Freien erneut messen.`;
+        `Die beste Genauigkeit (±${Math.round(fix.accuracy)} m) ist schlechter als der ` +
+        `Grenzwert von ${gpsThreshold} m. Bitte möglichst im Freien bleiben und weiter messen.`;
       gpsWarning.classList.remove("d-none");
     } else {
       gpsWarning.classList.add("d-none");
     }
+  };
+
+  const onPosition = (pos) => {
+    const { latitude, longitude, accuracy } = pos.coords;
+    samples.push({ latitude, longitude, accuracy, timestamp: pos.timestamp });
+    if (samples.length > RECENT_MAX) {
+      samples.shift();
+    }
+    fix = aggregateFix(samples);
+    renderGps(accuracy);
     updateSubmitState();
   };
   const onPositionError = (err) => {
@@ -76,6 +132,15 @@ async function init(root) {
       `<span class="text-danger">Standort nicht verfügbar: ${escapeHtml(err.message)}. ` +
       `Bitte den Standortzugriff erlauben.</span>`;
   };
+
+  gpsReset?.addEventListener("click", () => {
+    samples = [];
+    fix = null;
+    gpsStatus.textContent = "Standort wird neu ermittelt …";
+    gpsWarning.classList.add("d-none");
+    updateSubmitState();
+  });
+
   if ("geolocation" in navigator) {
     navigator.geolocation.watchPosition(onPosition, onPositionError, {
       enableHighAccuracy: true,
@@ -122,7 +187,7 @@ async function init(root) {
   };
 
   submitBtn.addEventListener("click", async () => {
-    if (!bestFix || photoFiles.length === 0) {
+    if (!fix || photoFiles.length === 0) {
       return;
     }
     if (!projectSelect.value || !sensorSelect.value) {
@@ -140,11 +205,11 @@ async function init(root) {
         client_uuid: crypto.randomUUID(),
         sensor_id: parseInt(sensorSelect.value, 10),
         project_id: parseInt(projectSelect.value, 10),
-        latitude: bestFix.latitude.toFixed(6),
-        longitude: bestFix.longitude.toFixed(6),
-        accuracy_m: bestFix.accuracy,
+        latitude: fix.latitude.toFixed(6),
+        longitude: fix.longitude.toFixed(6),
+        accuracy_m: fix.accuracy,
         captured_at: new Date().toISOString(),
-        gps_timestamp: new Date(bestFix.timestamp).toISOString(),
+        gps_timestamp: new Date(fix.timestamp).toISOString(),
         description: description.value,
       };
       await enqueue(entry, blobs);

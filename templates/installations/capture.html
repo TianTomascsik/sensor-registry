@@ -21,7 +21,12 @@
 
       <div class="card mb-3">
         <div class="card-body">
-          <h2 class="h6"><i class="bi bi-geo-alt me-1"></i>Standort</h2>
+          <div class="d-flex justify-content-between align-items-center mb-1">
+            <h2 class="h6 mb-0"><i class="bi bi-geo-alt me-1"></i>Standort</h2>
+            <button type="button" id="gpsReset" class="btn btn-sm btn-outline-secondary">
+              <i class="bi bi-arrow-repeat me-1"></i>Neu messen
+            </button>
+          </div>
           <div id="gpsStatus" class="text-muted">Standort wird ermittelt …</div>
           <div id="gpsWarning" class="alert alert-warning mt-2 d-none mb-0"></div>
         </div>
